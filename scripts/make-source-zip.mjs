@@ -27,7 +27,8 @@ writeFileSync(path.join(stage, "package.json"), JSON.stringify({
 execFileSync("npm", ["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"], { cwd: stage, stdio: "ignore", shell: true });
 
 mkdirSync(path.join(root, "release-upload"), { recursive: true });
-const zip = path.join(root, "release-upload", `kitty-next-door-live-source-${version}.zip`);
+mkdirSync(path.join(root, "release-upload", `v${version}`), { recursive: true });
+const zip = path.join(root, "release-upload", `v${version}`, `kitty-next-door-live-source-${version}.zip`);
 rmSync(zip, { force: true });
 // Forward-slash paths, sorted, so the archive is the same on every OS.
 execFileSync("python", ["-c", `

@@ -6,12 +6,13 @@
 // changes and saves in one go (`mutate`), because other messages can be
 // handled while we wait on a peer.
 import {
-  CAPS, type ClientMsg, type ErrorCode, type Guest, type HomeReason, type Notice, type Person, type Profile,
+  CAPS, type Cap, type ClientMsg, type ErrorCode, type Guest, type HomeReason, type Notice, type Person, type Profile,
   type ServerMsg, type Snapshot,
 } from "../../shared/protocol";
 import type { GiftId } from "../../../src/core/visit";
 
-type Cat = Snapshot["cat"];
+/** Server-side cat location; the park variant also remembers its park entry. */
+type Cat = Exclude<Snapshot["cat"], { where: "park" }> | { where: "park"; parkId: string; since: number; returnAt: number };
 
 export interface UserRecord {
   code: string;
@@ -24,6 +25,8 @@ export interface UserRecord {
   cat: Cat;
   guests: Record<string, Guest>;
   rate: { friend: number[]; send: number[] };
+  /** Features this user's client understands (from its latest hello). Missing = old client. */
+  caps?: Cap[];
 }
 
 export type FriendRequestResult =
@@ -32,7 +35,13 @@ export type FriendRequestResult =
   | { status: "pending" }
   | { status: "unknown" }
   | { status: "full" };
-export type HostResult = "ok" | "not_friends" | "full" | "unknown";
+export type HostResult = "ok" | "ok_letter_dropped" | "not_friends" | "full" | "unknown";
+
+/** The shared park, reached via Durable Object RPC. */
+export interface ParkApi {
+  join(owner: string, profile: Profile): Promise<{ id: string } | "full" | "blocked">;
+  leave(id: string): Promise<void>;
+}
 
 /** What one user can ask of another. Implemented by `UserCore`, reached via Durable Object RPC. */
 export interface PeerApi {
@@ -40,11 +49,15 @@ export interface PeerApi {
   friendAccepted(from: string, profile: Profile): Promise<boolean>;
   friendDeclined(from: string): Promise<void>;
   unfriended(from: string): Promise<void>;
-  hostGuest(guest: { owner: string; profile: Profile; msg: string; gift: GiftId }): Promise<HostResult>;
+  hostGuest(guest: { owner: string; profile: Profile; msg: string; gift: GiftId; letter?: string }): Promise<HostResult>;
   removeGuest(owner: string): Promise<void>;
   catReturned(host: string, reason: HomeReason): Promise<void>;
   profileChanged(from: string, profile: Profile): Promise<void>;
   isCatWith(host: string): Promise<boolean>;
+  /** Asked by the park when tidying up. */
+  isInPark(parkId: string): Promise<boolean>;
+  /** The park crowned this user's cat Cat of the Hour. */
+  crowned(): Promise<void>;
 }
 
 export interface CoreEnv {
@@ -52,12 +65,15 @@ export interface CoreEnv {
   save(r: UserRecord): Promise<void>;
   wipe(): Promise<void>;
   peer(code: string): PeerApi;
+  park(): ParkApi;
   /** Deliver to every signed-in connection of this user. */
   send(msg: ServerMsg): void;
   setAlarm(at: number | null): Promise<void>;
   hash(token: string): Promise<string>;
   now(): number;
   stayMs: number;
+  /** How long a trip to the park lasts. */
+  parkStayMs: number;
 }
 
 const HOUR = 3_600_000;
@@ -104,12 +120,13 @@ export class UserCore implements PeerApi {
   }
 
   static snapshot(r: UserRecord): Snapshot {
+    const c = r.cat;
     return {
       me: { code: r.code, profile: r.profile },
       friends: Object.entries(r.friends).map(([code, f]) => ({ code, profile: f.profile })),
       incoming: Object.entries(r.incoming).map(([code, f]) => ({ code, profile: f.profile })),
       outgoing: Object.keys(r.outgoing).map((code) => ({ code, profile: null })),
-      cat: r.cat,
+      cat: c.where === "park" ? { where: "park", since: c.since, returnAt: c.returnAt } : c,
       guests: Object.values(r.guests),
     };
   }
@@ -136,7 +153,8 @@ export class UserCore implements PeerApi {
   }
 
   /** After signing in: sync the profile, tidy up guests, send the first snapshot. */
-  async welcome(profile: Profile): Promise<void> {
+  async welcome(profile: Profile, caps: Cap[] = []): Promise<void> {
+    await this.mutate((r) => { r.caps = caps; });
     await this.setProfile(profile);
     await this.reconcileGuests();
     await this.push();
@@ -159,7 +177,8 @@ export class UserCore implements PeerApi {
       case "friend_request": await this.requestFriend(m.code); break;
       case "friend_respond": await this.respondFriend(m.code, m.accept); break;
       case "unfriend": await this.unfriend(m.code); break;
-      case "send_cat": await this.sendCat(m.to, m.msg, m.gift); break;
+      case "send_cat": await this.sendCat(m.to, m.msg, m.gift, m.letter); break;
+      case "to_park": await this.toPark(); break;
       case "recall": await this.recall("recalled"); break;
       case "send_home": await this.sendHome(m.owner); break;
       case "delete_me": await this.deleteMe(); return;
@@ -319,7 +338,7 @@ export class UserCore implements PeerApi {
 
   // ---- visits ----------------------------------------------------------------
 
-  private async sendCat(to: string, msg: string, gift: GiftId): Promise<void> {
+  private async sendCat(to: string, msg: string, gift: GiftId, letter?: string): Promise<void> {
     const ready = await this.mutate((r) => {
       if (!r.friends[to]) return "not_friends" as const;
       if (r.cat.where !== "home") return "cat_busy" as const;
@@ -331,50 +350,107 @@ export class UserCore implements PeerApi {
     if (typeof ready === "string") return this.error(ready);
     await this.push(); // the cat starts walking off-screen right away
 
-    const res = await this.call(to, (p) => p.hostGuest({ owner: ready.me, profile: ready.profile, msg, gift }));
+    const res = await this.call(to, (p) => p.hostGuest({ owner: ready.me, profile: ready.profile, msg, gift, ...(letter ? { letter } : {}) }));
+    const ok = res === "ok" || res === "ok_letter_dropped";
     const now = this.env.now();
     const returnAt = now + this.env.stayMs;
     const arrived = await this.mutate((r) => {
       if (r.cat.where !== "traveling" || r.cat.to !== to) return false; // unfriended meanwhile
-      r.cat = res === "ok" ? { where: "away", at: to, since: now, returnAt } : { where: "home" };
-      return res === "ok";
+      r.cat = ok ? { where: "away", at: to, since: now, returnAt } : { where: "home" };
+      return ok;
     });
     if (arrived) {
       await this.env.setAlarm(returnAt);
-    } else if (res !== "ok") {
+      // Their extension is too old to show letters: say so rather than losing it silently.
+      if (res === "ok_letter_dropped") this.error("letter_not_delivered", ready.who);
+    } else if (!ok) {
       this.error(res === "full" ? "host_full" : res === "unreachable" ? "unreachable" : "not_friends", ready.who);
     }
   }
 
-  async hostGuest(g: { owner: string; profile: Profile; msg: string; gift: GiftId }): Promise<HostResult> {
+  async hostGuest(g: { owner: string; profile: Profile; msg: string; gift: GiftId; letter?: string }): Promise<HostResult> {
     const res = await this.mutate((r): HostResult => {
       if (!r.friends[g.owner]) return "not_friends";
       if (!r.guests[g.owner] && Object.keys(r.guests).length >= CAPS.guests) return "full";
-      r.guests[g.owner] = { ...g, since: r.guests[g.owner]?.since ?? this.env.now() };
-      return "ok";
+      const canRead = r.caps?.includes("letters") ?? false;
+      const { letter, ...rest } = g;
+      const guest: Guest = { ...rest, since: r.guests[g.owner]?.since ?? this.env.now() };
+      if (letter && canRead) guest.letter = letter;
+      r.guests[g.owner] = guest;
+      return letter && !canRead ? "ok_letter_dropped" : "ok";
     });
     if (!res) return "unknown";
-    if (res === "ok") {
+    if (res === "ok" || res === "ok_letter_dropped") {
       this.notice({ kind: "guest_arrived", who: { code: g.owner, profile: g.profile } });
       await this.push();
     }
     return res;
   }
 
-  /** Bring our cat home from wherever it is, and tell the host. */
+  /** Bring our cat home from wherever it is (a friend's or the park), and tell them. */
   private async recall(reason: HomeReason): Promise<void> {
     const res = await this.mutate((r) => {
-      if (r.cat.where === "traveling") return "busy" as const;
-      if (r.cat.where !== "away") return null;
-      const host = r.cat.at;
+      const c = r.cat;
+      if (c.where === "traveling") return "busy" as const;
+      if (c.where === "park") {
+        r.cat = { where: "home" };
+        return { kind: "park" as const, parkId: c.parkId };
+      }
+      if (c.where !== "away") return null;
       r.cat = { where: "home" };
-      return { host, me: r.code, who: this.person(r, host) };
+      return { kind: "friend" as const, host: c.at, me: r.code, who: this.person(r, c.at) };
     });
     if (res === "busy") return this.error("cat_busy");
     if (!res) return;
     await this.env.setAlarm(null);
+    if (res.kind === "park") {
+      await this.leavePark(res.parkId);
+      this.notice({ kind: "cat_home", reason });
+      return;
+    }
     await this.call(res.host, (p) => p.removeGuest(res.me));
     this.notice({ kind: "cat_home", who: res.who, reason });
+  }
+
+  private async leavePark(parkId: string): Promise<void> {
+    try { await this.env.park().leave(parkId); } catch { /* the park tidies up ghosts itself */ }
+  }
+
+  /** Send our cat to the public park. */
+  private async toPark(): Promise<void> {
+    const ready = await this.mutate((r) => {
+      if (r.cat.where !== "home") return "cat_busy" as const;
+      if (!this.allowRate(r.rate.send, CAPS.sendsPerHour)) return "rate_limited" as const;
+      r.cat = { where: "traveling", to: r.code }; // traveling "to ourselves" means: to the park
+      return { me: r.code, profile: r.profile };
+    });
+    if (!ready) return;
+    if (typeof ready === "string") return this.error(ready);
+    await this.push();
+    let res: { id: string } | "full" | "blocked" | "unreachable";
+    try { res = await this.env.park().join(ready.me, ready.profile); } catch { res = "unreachable"; }
+    const now = this.env.now();
+    const returnAt = now + this.env.parkStayMs;
+    const joined = await this.mutate((r) => {
+      if (r.cat.where !== "traveling" || r.cat.to !== r.code) return false;
+      r.cat = typeof res === "object" ? { where: "park", parkId: res.id, since: now, returnAt } : { where: "home" };
+      return typeof res === "object";
+    });
+    if (joined) await this.env.setAlarm(returnAt);
+    else if (typeof res === "object") await this.leavePark(res.id);
+    else this.error(res === "unreachable" ? "unreachable" : "park_full");
+  }
+
+  async isInPark(parkId: string): Promise<boolean> {
+    const c = (await this.env.load())?.cat;
+    return !!c && c.where === "park" && c.parkId === parkId;
+  }
+
+  async crowned(): Promise<void> {
+    const r = await this.env.load();
+    // Also while still "on the way": the park may crown a cat the moment it arrives.
+    const c = r?.cat;
+    if (c && (c.where === "park" || (c.where === "traveling" && c.to === r.code))) this.notice({ kind: "crowned" });
   }
 
   private async sendHome(owner: string): Promise<void> {
@@ -422,7 +498,7 @@ export class UserCore implements PeerApi {
   /** The visit timer ran out. */
   async alarm(): Promise<void> {
     const r = await this.env.load();
-    if (!r || r.cat.where !== "away") return;
+    if (!r || (r.cat.where !== "away" && r.cat.where !== "park")) return;
     if (this.env.now() < r.cat.returnAt - 1000) {
       await this.env.setAlarm(r.cat.returnAt);
       return;
@@ -440,6 +516,7 @@ export class UserCore implements PeerApi {
     const others = new Set([...Object.keys(r.friends), ...Object.keys(r.guests), ...Object.keys(r.outgoing)]);
     if (r.cat.where === "away") others.add(r.cat.at);
     await Promise.allSettled([...others].map((c) => this.call(c, (p) => p.unfriended(r.code))));
+    if (r.cat.where === "park") await this.leavePark(r.cat.parkId);
     await this.env.setAlarm(null);
     await this.env.wipe();
   }

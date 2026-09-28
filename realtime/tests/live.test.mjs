@@ -12,8 +12,8 @@ const newToken = () => randomBytes(32).toString("base64url");
 const clients = [];
 
 class Client {
-  constructor(cat, { code = newCode(), token = newToken() } = {}) {
-    Object.assign(this, { cat, code, token, frames: [], closed: null });
+  constructor(cat, { code = newCode(), token = newToken(), caps = ["letters", "park"] } = {}) {
+    Object.assign(this, { cat, code, token, caps, frames: [], closed: null });
     clients.push(this);
   }
   get profile() { return { cat: this.cat, coat: "ginger", owner: `${this.cat}'s human` }; }
@@ -26,7 +26,7 @@ class Client {
   }
   async connect() {
     await this.open();
-    this.send({ t: "hello", token: this.token, profile: this.profile });
+    this.send({ t: "hello", token: this.token, profile: this.profile, caps: this.caps });
     await this.waitFor((f) => f.t === "state");
     return this;
   }
@@ -153,4 +153,46 @@ test("deleting an account closes it and tidies up the friend's side", async () =
   // The code is free again: a new token can register it.
   const again = await new Client("Mochi", { code: a.code }).connect();
   assert.equal((await again.state(() => true)).friends.length, 0);
+});
+
+test("letters arrive with the cat, line breaks intact", async () => {
+  const a = await new Client("Mochi").connect();
+  const b = await new Client("Kiki").connect();
+  await friends(a, b);
+  const letter = ["Dear Kiki,", "", "The recipe:", "1. flour 🍞", "2. love"].join("\n");
+  a.send({ t: "send_cat", to: b.code, msg: "for you", gift: "flower", letter });
+  const s = await b.state((x) => x.guests.length === 1);
+  assert.equal(s.guests[0].letter, letter);
+});
+
+test("the park: spectators see cats come and go, crowns, and never a friend code", async () => {
+  const spectator = new WebSocket(`${SERVER}/v1/park`);
+  const frames = [];
+  spectator.onmessage = (e) => { if (e.data !== "pong") frames.push(JSON.parse(e.data)); };
+  await new Promise((res, rej) => { spectator.onopen = res; spectator.onerror = rej; });
+  const waitFrame = async (pred, ms = 5000) => {
+    const end = Date.now() + ms;
+    while (Date.now() < end) {
+      const f = frames.find(pred);
+      if (f) return f;
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    throw new Error("park frame timeout: " + JSON.stringify(frames.slice(-3)));
+  };
+  await waitFrame((f) => f.t === "park");
+
+  const a = await new Client("ParkCat").connect();
+  a.send({ t: "to_park" });
+  await a.state((s) => s.cat.where === "park");
+  const joined = await waitFrame((f) => f.t === "join" && f.cat.cat === "ParkCat");
+  assert.match(joined.cat.id, /^[a-z0-9]{12}$/);
+  a.send({ t: "recall" });
+  await waitFrame((f) => f.t === "leave" && f.id === joined.cat.id);
+  await a.notice((n) => n.kind === "cat_home");
+
+  // Junk from a spectator is ignored; ping gets pong.
+  spectator.send("{nonsense");
+  spectator.send("ping");
+  assert.ok(!JSON.stringify(frames).includes(a.code), "spectators never see a friend code");
+  spectator.close();
 });

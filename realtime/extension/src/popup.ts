@@ -1,8 +1,8 @@
 import { COATS } from "../../../src/core/coats";
 import { cleanText, GIFTS, LIMITS, type GiftId } from "../../../src/core/visit";
 import { validSettings, type Settings } from "../../../src/ext/state";
-import { formatCode, normCode, parseServerMsg, type ClientMsg, type Person, type Snapshot } from "../../shared/protocol";
-import { ext, K, type Conn } from "./api";
+import { cleanLetter, formatCode, LETTER_MAX, normCode, parseServerMsg, type ClientMsg, type Person, type Snapshot } from "../../shared/protocol";
+import { ext, K, PARK_URL, type Conn } from "./api";
 import { catOf, describeNotice, nameOf } from "./text";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -125,6 +125,14 @@ async function main(): Promise<void> {
   const giftNames: Record<GiftId, string> = { fish: "Fish", yarn: "Ball of yarn", flower: "Flower", mouse: "Toy mouse" };
   for (const id of Object.keys(GIFTS) as GiftId[]) gift.add(new Option(`${GIFTS[id]} ${giftNames[id]}`, id));
   const msg = $<HTMLInputElement>("msg");
+  const letter = $<HTMLTextAreaElement>("letter");
+  const countLetter = () => {
+    const n = Array.from(letter.value).length;
+    $("letterCount").textContent = n ? `${n} / ${LETTER_MAX}` : "";
+  };
+  letter.addEventListener("input", countLetter);
+  ($("watchPark") as HTMLAnchorElement).href = PARK_URL;
+  $("toPark").addEventListener("click", () => act({ t: "to_park" }));
 
   // ---- friends ----
   const addCode = $<HTMLInputElement>("addCode");
@@ -150,6 +158,7 @@ async function main(): Promise<void> {
     setTimeout(() => { $("copyCode").textContent = "Copy"; }, 1500);
   });
   $("recall").addEventListener("click", () => act({ t: "recall" }));
+  let openLetter: string | null = null;
   confirmButton($<HTMLButtonElement>("deleteMe"), "Click again to delete everything", () => act({ t: "delete_me" }));
   $("startFresh").addEventListener("click", () => {
     ext.runtime.sendMessage({ startFresh: true }).catch(() => {});
@@ -170,13 +179,17 @@ async function main(): Promise<void> {
     // Where's my cat?
     const cat = s?.cat ?? { where: "home" as const };
     const friendByCode = new Map(s?.friends.map((f) => [f.code, f]) ?? []);
-    $("recall").hidden = cat.where !== "away";
+    $("recall").hidden = cat.where !== "away" && cat.where !== "park";
+    ($("toPark") as HTMLButtonElement).disabled = cat.where !== "home";
     if (cat.where === "home") {
       $("catStatus").textContent = `${myCat} is home`;
       $("catSub").textContent = "Send them to visit a friend below.";
     } else if (cat.where === "traveling") {
       $("catStatus").textContent = `${myCat} is on the way…`;
       $("catSub").textContent = `Heading to ${nameOf(friendByCode.get(cat.to) ?? { code: cat.to, profile: null })}`;
+    } else if (cat.where === "park") {
+      $("catStatus").textContent = `${myCat} is at the Kitty Park 🌳`;
+      $("catSub").textContent = `Back in ${timeLeft(cat.returnAt - Date.now())}`;
     } else {
       $("catStatus").textContent = `${myCat} is visiting ${nameOf(friendByCode.get(cat.at) ?? { code: cat.at, profile: null })}`;
       $("catSub").textContent = `Back in ${timeLeft(cat.returnAt - Date.now())}`;
@@ -192,7 +205,12 @@ async function main(): Promise<void> {
     const friends = s?.friends ?? [];
     $("sendOpts").hidden = friends.length === 0;
     $("friends").replaceChildren(...(friends.length ? friends.map((p) => {
-      const send = button(`Send ${myCat}`, () => act({ t: "send_cat", to: p.code, msg: cleanText(msg.value, LIMITS.msg), gift: gift.value as GiftId }), true);
+      const send = button(`Send ${myCat}`, () => {
+        const l = cleanLetter(letter.value);
+        act({ t: "send_cat", to: p.code, msg: cleanText(msg.value, LIMITS.msg), gift: gift.value as GiftId, ...(l ? { letter: l } : {}) });
+        letter.value = "";
+        countLetter();
+      }, true);
       send.disabled = cat.where !== "home";
       const remove = button("✕", () => {});
       remove.title = `Remove ${nameOf(p)} from friends`;
@@ -204,10 +222,24 @@ async function main(): Promise<void> {
 
     // Guests.
     $("guestsBox").hidden = !s?.guests.length;
-    $("guests").replaceChildren(...(s?.guests ?? []).map((g) => {
+    $("guests").replaceChildren(...(s?.guests ?? []).flatMap((g) => {
       const p = { code: g.owner, profile: g.profile };
-      return personRow(p, `${GIFTS[g.gift]} ${g.profile.cat}${g.msg ? ` · “${g.msg}”` : ""}`,
-        button("Send home", () => act({ t: "send_home", owner: g.owner })));
+      const buttons = [button("Send home", () => act({ t: "send_home", owner: g.owner }))];
+      if (g.letter) {
+        buttons.unshift(button(openLetter === g.owner ? "Hide" : "📩 Read", () => {
+          openLetter = openLetter === g.owner ? null : g.owner;
+          render();
+        }, true));
+      }
+      const row = personRow(p, `${GIFTS[g.gift]} ${g.profile.cat}${g.msg ? ` · “${g.msg}”` : ""}`, ...buttons);
+      if (!g.letter || openLetter !== g.owner) return [row];
+      // Letters are plain text (textContent), never HTML or clickable links.
+      const body = el("div", { className: "letter", textContent: g.letter });
+      const copy = button("Copy letter", async () => {
+        try { await navigator.clipboard.writeText(g.letter!); copy.textContent = "Copied!"; }
+        catch { getSelection()?.selectAllChildren(body); }
+      });
+      return [row, body, copy];
     }));
   }
 

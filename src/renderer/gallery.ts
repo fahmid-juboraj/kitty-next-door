@@ -5,7 +5,7 @@ import { COATS, DEFAULT_COAT } from "../core/coats";
 import { drawCat, type RenderState } from "../core/draw";
 import { clonePose, POSES, type Pose, type PoseName } from "../core/pose";
 import type { PetBridge } from "../main/preload";
-import { renderHero, renderOg, renderPromo } from "./marketing";
+import { renderHero, renderOg, renderParkOg, renderPromo } from "./marketing";
 
 declare global {
   interface Window { pet: PetBridge }
@@ -102,6 +102,7 @@ async function main(): Promise<void> {
   }
   await window.pet.savePng("art/hero.png", renderHero().toDataURL("image/png"));
   await window.pet.savePng("art/og.png", renderOg().toDataURL("image/png"));
+  await window.pet.savePng("art/og-park.png", renderParkOg().toDataURL("image/png"));
   await window.pet.savePng("store/promo-440x280.png", renderPromo(440, 280).toDataURL("image/png"));
   await window.pet.savePng("store/promo-1400x560.png", renderPromo(1400, 560).toDataURL("image/png"));
   window.pet.galleryDone();

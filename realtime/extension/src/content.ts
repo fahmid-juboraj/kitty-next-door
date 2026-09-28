@@ -7,7 +7,7 @@ import { GIFTS } from "../../../src/core/visit";
 import { idleSeconds, validIdle, validSettings, type IdleRecord, type Settings } from "../../../src/ext/state";
 import { Bubble, CatActor, startLoop } from "../../../src/web/actor";
 import { parseServerMsg, type Guest, type Notice, type Snapshot } from "../../shared/protocol";
-import { ext, K } from "./api";
+import { ext, K, PARK_URL } from "./api";
 import { describeNotice } from "./text";
 
 const coatOf = (id: string): Coat => COATS[id] ?? DEFAULT_COAT;
@@ -27,6 +27,65 @@ interface GuestView {
   guest: Guest;
   actor: CatActor;
   leaving: boolean;
+  /** Floating envelope while the guest carries a letter. */
+  envelope: HTMLDivElement | null;
+}
+
+/** A letter, shown as plain text in a card over the page. */
+class LetterCard {
+  private readonly el: HTMLDivElement;
+  private readonly body: HTMLDivElement;
+  private readonly title: HTMLDivElement;
+  private readonly copy: HTMLButtonElement;
+  constructor(parent: Node) {
+    this.el = document.createElement("div");
+    Object.assign(this.el.style, {
+      position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: "min(460px, calc(100vw - 32px))",
+      maxHeight: "min(70vh, 560px)", display: "none", flexDirection: "column", gap: "10px", padding: "18px 20px",
+      background: "#fffaf3", color: "#3b2b27", border: "2px solid #3b2b27", borderRadius: "18px",
+      boxShadow: "0 6px 0 #3b2b27, 0 20px 50px rgba(0,0,0,.25)", pointerEvents: "auto",
+      font: "500 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif",
+    });
+    this.title = document.createElement("div");
+    this.title.style.cssText = "font-weight:800;font-size:17px";
+    this.body = document.createElement("div");
+    this.body.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;background:#fff;border:1.5px solid #ead9c6;border-radius:12px;padding:12px 14px;user-select:text";
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:8px;justify-content:flex-end";
+    const btn = (label: string, primary: boolean) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.style.cssText = `font:700 14px system-ui,sans-serif;padding:8px 14px;border-radius:10px;cursor:pointer;border:2px solid #3b2b27;color:#3b2b27;background:${primary ? "#f7ad63" : "transparent"}`;
+      return b;
+    };
+    this.copy = btn("Copy", false);
+    const close = btn("Close", true);
+    row.append(this.copy, close);
+    this.el.append(this.title, this.body, row);
+    parent.appendChild(this.el);
+    close.addEventListener("click", () => this.hide());
+    this.copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(this.body.textContent ?? "");
+        this.copy.textContent = "Copied!";
+      } catch {
+        // Some pages block clipboard access; select the text so Ctrl+C works.
+        getSelection()?.selectAllChildren(this.body);
+        this.copy.textContent = "Selected: press Ctrl+C";
+      }
+    });
+    window.addEventListener("keydown", (e) => { if (e.key === "Escape") this.hide(); }, true);
+  }
+  show(from: string, text: string): void {
+    this.title.textContent = `📩 A letter from ${from}`;
+    this.body.textContent = text;
+    this.copy.textContent = "Copy";
+    this.el.style.display = "flex";
+  }
+  hide(): void {
+    this.el.style.display = "none";
+  }
 }
 
 class Toast {
@@ -58,6 +117,8 @@ class Toast {
 async function main(): Promise<void> {
   const w = window as unknown as Record<string, unknown>;
   if (w.__kittyNextDoorLive || window.top !== window || !(document.documentElement instanceof HTMLHtmlElement)) return;
+  // The park page draws its own cats; no overlay cat on top of it.
+  if (location.href.split("#")[0].startsWith(PARK_URL)) return;
   w.__kittyNextDoorLive = true;
   // Two cat extensions would mean two cats on every page; defer to the other one.
   const otherExtension = () => !!document.querySelector("kitty-next-door");
@@ -98,6 +159,7 @@ async function main(): Promise<void> {
   let sinceSave = 0;
   const bubble = new Bubble(root);
   const toast = new Toast(root);
+  const letterCard = new LetterCard(root);
 
   const hiddenHere = () => !settings.enabled || settings.disabledSites.includes(location.hostname);
 
@@ -106,13 +168,26 @@ async function main(): Promise<void> {
       `${GIFTS[g.gift]} ${g.profile.cat} is visiting you!`,
       g.msg ? `“${g.msg}”` : "",
       g.profile.owner ? `— from ${g.profile.owner}` : "",
+      g.letter ? "📩 Brought you a letter. Click the cat to read it." : "",
     ], 9000);
+  }
+
+  function makeEnvelope(): HTMLDivElement {
+    const e = document.createElement("div");
+    e.textContent = "✉️";
+    Object.assign(e.style, { position: "absolute", left: "0", top: "0", fontSize: "22px", pointerEvents: "none",
+      filter: "drop-shadow(0 2px 2px rgba(0,0,0,.25))" });
+    root.appendChild(e);
+    return e;
   }
 
   function removeAll(): void {
     own?.destroy();
     own = null;
-    for (const v of guests.values()) v.actor.destroy();
+    for (const v of guests.values()) {
+      v.actor.destroy();
+      v.envelope?.remove();
+    }
     guests.clear();
   }
 
@@ -156,11 +231,18 @@ async function main(): Promise<void> {
       if (view) {
         view.guest = g;
         view.actor.coat = coatOf(g.profile.coat);
+        if (g.letter && !view.envelope) view.envelope = makeEnvelope();
+        if (!g.letter && view.envelope) { view.envelope.remove(); view.envelope = null; }
         continue;
       }
       const actor = new CatActor(root, coatOf(g.profile.coat), { x: width * 0.3, groundY });
-      actor.canvas.addEventListener("click", () => greet(g));
-      guests.set(g.owner, { guest: g, actor, leaving: false });
+      const gv: GuestView = { guest: g, actor, leaving: false, envelope: g.letter ? makeEnvelope() : null };
+      actor.canvas.addEventListener("click", () => {
+        const cur = gv.guest;
+        if (cur.letter) letterCard.show(cur.profile.owner || cur.profile.cat, cur.letter);
+        else greet(cur);
+      });
+      guests.set(g.owner, gv);
       const pos = stored.guestPos[g.owner];
       if (stored.seen[g.owner] === g.since) {
         if (pos) actor.brain.restore(pos, width);
@@ -217,10 +299,16 @@ async function main(): Promise<void> {
       v.actor.brain.update(dt, { ...base, hovering: v.actor.hovering });
       if (v.leaving && v.actor.brain.gone) {
         v.actor.destroy();
+        v.envelope?.remove();
         guests.delete(owner);
         continue;
       }
       v.actor.render();
+      if (v.envelope) {
+        const h = v.actor.headTop;
+        const bob = Math.sin(performance.now() / 400) * 3;
+        v.envelope.style.transform = `translate(${Math.round(h.x + 18)}px, ${Math.round(h.y + 10 + bob)}px)`;
+      }
       v.actor.updateHover(cursor);
       fps = Math.max(fps, v.actor.brain.fps);
       if (!v.leaving) {
@@ -288,10 +376,12 @@ async function main(): Promise<void> {
     hooks.__kittyLiveTest = {
       state: () => ({
         own: own && { activity: own.brain.activity, x: Math.round(own.brain.x), leaving: ownLeaving },
-        guests: [...guests.values()].map((v) => ({ owner: v.guest.owner, activity: v.actor.brain.activity, x: Math.round(v.actor.brain.x), leaving: v.leaving })),
+        guests: [...guests.values()].map((v) => ({ owner: v.guest.owner, activity: v.actor.brain.activity, x: Math.round(v.actor.brain.x), leaving: v.leaving, envelope: !!v.envelope })),
+        letter: (() => { const c = root.querySelector("div[style*='translate(-50%, -50%)']") as HTMLElement | null; return c && c.style.display !== "none" ? c.textContent : ""; })(),
         bubble: bubble.el.style.opacity === "1" ? bubble.el.textContent : "",
         toast: toast.el.style.opacity === "1" ? toast.el.textContent : "",
       }),
+      openLetterOf: (owner: string) => { guests.get(owner)?.actor.canvas.dispatchEvent(new MouseEvent("click")); },
     };
   }
 }

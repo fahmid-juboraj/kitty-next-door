@@ -4,10 +4,14 @@
 import { DurableObject } from "cloudflare:workers";
 import { CODE_RE, parseClientMsg, type HomeReason, type Profile, type ServerMsg } from "../../shared/protocol";
 import type { GiftId } from "../../../src/core/visit";
-import { UserCore, type PeerApi, type UserRecord } from "./core";
+import { UserCore, type ParkApi, type PeerApi, type UserRecord } from "./core";
+import type { ParkDO } from "./park";
 
 export interface Env {
   USERS: DurableObjectNamespace<UserDO>;
+  PARK: DurableObjectNamespace<ParkDO>;
+  /** How long a trip to the park lasts (seconds). */
+  PARK_STAY_SECONDS?: string;
   /** How long a visit lasts before the cat walks home (seconds). */
   STAY_SECONDS?: string;
 }
@@ -37,6 +41,7 @@ export class UserDO extends DurableObject<Env> {
       save: (r) => ctx.storage.put("user", r),
       wipe: () => ctx.storage.deleteAll(),
       peer: (code) => env.USERS.get(env.USERS.idFromName(code)) as unknown as PeerApi,
+      park: () => env.PARK.get(env.PARK.idFromName("main")) as unknown as ParkApi,
       send: (msg) => {
         const data = frame(msg);
         for (const ws of ctx.getWebSockets()) {
@@ -49,6 +54,7 @@ export class UserDO extends DurableObject<Env> {
       hash: async (token) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token))),
       now: () => Date.now(),
       stayMs: Math.max(1, Number(env.STAY_SECONDS ?? 7200)) * 1000,
+      parkStayMs: Math.max(1, Number(env.PARK_STAY_SECONDS ?? 3600)) * 1000,
     });
   }
 
@@ -78,7 +84,7 @@ export class UserDO extends DurableObject<Env> {
         return;
       }
       ws.serializeAttachment({ ...att, authed: true } satisfies Attachment);
-      await this.core.welcome(m.profile);
+      await this.core.welcome(m.profile, m.caps);
       return;
     }
 
@@ -105,4 +111,6 @@ export class UserDO extends DurableObject<Env> {
   catReturned(host: string, reason: HomeReason) { return this.core.catReturned(host, reason); }
   profileChanged(from: string, profile: Profile) { return this.core.profileChanged(from, profile); }
   isCatWith(host: string) { return this.core.isCatWith(host); }
+  isInPark(parkId: string) { return this.core.isInPark(parkId); }
+  crowned() { return this.core.crowned(); }
 }

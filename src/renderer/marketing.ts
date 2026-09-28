@@ -4,6 +4,7 @@
 import { COATS } from "../core/coats";
 import { drawCat, type Particle, type RenderState } from "../core/draw";
 import { clonePose, POSES } from "../core/pose";
+import { drawScenery } from "../site/park-scene";
 
 const INK = "#3b2b27";
 const FONT = `"Segoe UI", system-ui, sans-serif`;
@@ -198,5 +199,35 @@ export function renderPromo(W: number, H: number): HTMLCanvasElement {
   const cx = W - 150 * u;
   drawCat(ctx, sitting(1, [heart(33, -72)]), COATS.ginger, s, cx - 50 * u, ground);
   drawCat(ctx, sitting(-1), COATS.black, s, cx + 52 * u, ground);
+  return c;
+}
+
+/** Link preview for /park/: the park scenery with a few cats and a title card. */
+export function renderParkOg(): HTMLCanvasElement {
+  const W = 1200, H = 630;
+  const c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext("2d")!;
+  const L = drawScenery(ctx, W, H, "day");
+  const cast: [string, 1 | -1, number, number][] = [["ginger", 1, 0.3, 2], ["black", -1, 0.42, 2], ["cream", 1, 0.72, 1], ["grey", -1, 0.55, 0]];
+  for (const [coat, facing, x, lane] of cast) {
+    const ln = L.lanes[lane];
+    drawCat(ctx, sitting(facing, lane === 2 && facing === 1 ? [heart(33, -72)] : []), COATS[coat], ln.scale, W * x, ln.y);
+  }
+  ctx.fillStyle = "rgba(255, 250, 243, 0.95)";
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 5;
+  roundRect(ctx, 40, 36, 620, 150, 26);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = INK;
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `800 64px ${FONT}`;
+  ctx.fillText("Kitty Park 🌳", 70, 108);
+  ctx.font = `500 28px ${FONT}`;
+  ctx.globalAlpha = 0.8;
+  ctx.fillText("Live cats from everywhere. Bring yours!", 72, 156);
+  ctx.globalAlpha = 1;
   return c;
 }

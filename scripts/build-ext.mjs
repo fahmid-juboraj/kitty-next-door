@@ -46,7 +46,9 @@ function manifest(browser) {
 }
 
 rmSync("dist-ext", { recursive: true, force: true });
-rmSync("dist-site", { recursive: true, force: true });
+// Empty dist-site rather than deleting it: a running `wrangler dev` keeps the folder open.
+mkdirSync("dist-site", { recursive: true });
+for (const entry of readdirSync("dist-site")) rmSync(path.join("dist-site", entry), { recursive: true, force: true });
 
 for (const browser of ["chrome", "firefox"]) {
   const out = path.join("dist-ext", browser);
@@ -86,10 +88,14 @@ const fill = (html) => html.replace(/%([A-Z]+)%/g, (m, k) => {
 mkdirSync("dist-site/visit", { recursive: true });
 await build({ ...common, entryPoints: { visit: "src/site/visit.ts" }, outdir: "dist-site/visit" });
 await build({ ...common, entryPoints: { home: "src/site/home.ts" }, outdir: "dist-site" });
+mkdirSync("dist-site/park", { recursive: true });
+await build({ ...common, entryPoints: { park: "src/site/park.ts" }, outdir: "dist-site/park" });
+writeFileSync("dist-site/park/index.html", fill(readFileSync("src/site/park.html", "utf8")));
 writeFileSync("dist-site/visit/index.html", fill(readFileSync("src/site/visit.html", "utf8")));
 writeFileSync("dist-site/index.html", fill(readFileSync("src/site/index.html", "utf8")));
 cpSync("art/hero.png", "dist-site/hero.png");
 cpSync("art/og.png", "dist-site/og.png");
+cpSync("art/og-park.png", "dist-site/og-park.png");
 cpSync("assets/icon-48.png", "dist-site/icon-48.png");
 
 console.log(`extensions + site built (visit links -> ${visitBase})`);

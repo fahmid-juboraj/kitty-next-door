@@ -2,12 +2,15 @@
 //   /v1/connect/<CODE>  live server (one Durable Object per user)
 //   /go/<button>        counts a website button click, then redirects
 //   /stats?key=...      click counts (needs the STATS_KEY secret)
+//   /v1/park            live view of the public park (read-only WebSocket)
+//   /admin/park?key=... list cats in the park; &kick=<id> (&block=1) removes one
 //   everything else     static site files from ../../dist-site
 import { CODE_RE } from "../../shared/protocol";
 import { isBot, StatsDO, TARGETS } from "./stats";
 import type { Env as UserEnv } from "./user";
 
 export { UserDO } from "./user";
+export { ParkDO } from "./park";
 export { StatsDO };
 
 interface Env extends UserEnv {
@@ -17,6 +20,8 @@ interface Env extends UserEnv {
 }
 
 const stats = (env: Env) => env.STATS.get(env.STATS.idFromName("website"));
+const park = (env: Env) => env.PARK.get(env.PARK.idFromName("main"));
+const authorized = (env: Env, url: URL) => !!env.STATS_KEY && url.searchParams.get("key") === env.STATS_KEY;
 
 export default {
   async fetch(request, env, ctx): Promise<Response> {
@@ -43,9 +48,17 @@ export default {
     }
 
     if (url.pathname === "/stats") {
-      const key = url.searchParams.get("key");
-      if (!env.STATS_KEY || !key || key !== env.STATS_KEY) return new Response("not found", { status: 404 });
+      if (!authorized(env, url)) return new Response("not found", { status: 404 });
       return Response.json(await stats(env).report(), { headers: { "cache-control": "no-store" } });
+    }
+
+    if (url.pathname === "/v1/park") return park(env).fetch(request);
+
+    if (url.pathname === "/admin/park") {
+      if (!authorized(env, url)) return new Response("not found", { status: 404 });
+      const kick = url.searchParams.get("kick");
+      if (kick) return Response.json({ removed: await park(env).kick(kick, url.searchParams.get("block") === "1") });
+      return Response.json(await park(env).adminList(), { headers: { "cache-control": "no-store" } });
     }
 
     return new Response("not found", { status: 404 });

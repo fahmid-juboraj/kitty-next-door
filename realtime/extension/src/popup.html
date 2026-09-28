@@ -30,6 +30,11 @@
       button { font: 600 13px system-ui, sans-serif; padding: 6px 10px; border-radius: 9px; cursor: pointer; border: 2px solid var(--ink); color: var(--ink); background: transparent; white-space: nowrap; }
       button.primary { background: var(--accent); color: #3b2b27; }
       button:disabled { opacity: .45; cursor: default; }
+      textarea { width: 100%; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; resize: vertical; min-height: 64px; }
+      textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+      .park { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+      .park a { font-size: 12px; color: var(--muted); }
+      .letter { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 4px 0 8px; font-size: 13px; max-height: 180px; overflow: auto; }
       button.link { border: 0; padding: 0; color: var(--muted); text-decoration: underline; font-weight: 500; }
       .inline { display: flex; gap: 8px; }
       .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
@@ -71,6 +76,10 @@
         <div class="grow"><div class="name" id="catStatus"></div><div class="sub" id="catSub"></div></div>
         <button id="recall" type="button" hidden>Call home</button>
       </div>
+      <div class="park">
+        <button id="toPark" type="button">🌳 Send to the Park</button>
+        <a id="watchPark" href="#" target="_blank" rel="noopener">Watch the park ↗</a>
+      </div>
     </section>
 
     <section>
@@ -100,6 +109,9 @@
         <input type="text" id="msg" maxlength="80" placeholder="Thinking of you!" />
         <label for="gift">Gift</label>
         <select id="gift"></select>
+        <label for="letter">Letter (optional): write or paste anything</label>
+        <textarea id="letter" maxlength="1500" rows="3" placeholder="Dear friend…"></textarea>
+        <div class="sub" id="letterCount"></div>
       </div>
       <div class="sub" id="outgoing" style="margin-top:8px"></div>
     </section>

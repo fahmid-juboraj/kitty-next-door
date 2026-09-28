@@ -101,6 +101,8 @@ export class CatBrain {
   /** Walking off-screen for good (a guest going home). */
   private exiting = false;
   private isGone = false;
+  /** Walking-speed multiplier for the current walk (1 = stroll, 2+ = zoomies). */
+  private speedMul = 1;
 
   private readonly awayAfterS: number;
   private readonly slowBlinkRate: number;
@@ -181,6 +183,16 @@ export class CatBrain {
     this.attention = 0;
     this.lookTarget = { x: 0.9, y: 0 };
     this.saccadeTimer = seconds;
+  }
+
+  /** Walk to `x` at `speedMul` times normal speed, then carry on as usual. For scenes like the park. */
+  goTo(x: number, speedMul = 1): void {
+    if (this.isHeld || this.exiting) return;
+    const margin = 50 * this.scale;
+    this.walkTargetX = clamp(x, margin, this.width - margin);
+    if (Math.abs(this.walkTargetX - this.x) < 8) return;
+    this.speedMul = speedMul;
+    this.setActivity("walk", Infinity);
   }
 
   /** Another cat is close by: turn to it, sit together, share a heart. */
@@ -317,15 +329,16 @@ export class CatBrain {
       }
       case "walk": {
         const dx = this.walkTargetX - this.x;
-        const speed = WALK_SPEED * S;
+        const speed = WALK_SPEED * S * this.speedMul;
         if (Math.abs(dx) < 4) {
+          this.speedMul = 1;
           if (this.exiting) this.isGone = true;
           else this.decideNext(w, night);
           return;
         }
         this.facing = dx > 0 ? 1 : -1;
         this.x += Math.sign(dx) * Math.min(Math.abs(dx), speed * dt);
-        this.walkPhase += (dt * WALK_SPEED * Math.PI * 2) / 26;
+        this.walkPhase += (dt * WALK_SPEED * this.speedMul * Math.PI * 2) / 26;
         return;
       }
     }
@@ -386,6 +399,7 @@ export class CatBrain {
     const margin = 50 * this.scale;
     const tx = this.x + (targetX - this.x) * approachFrac;
     this.walkTargetX = clamp(tx, margin, this.width - margin);
+    this.speedMul = 1;
     if (Math.abs(this.walkTargetX - this.x) < 20) return this.setActivity("sit", rand(5, 12));
     this.setActivity("walk", Infinity);
   }

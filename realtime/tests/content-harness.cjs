@@ -102,6 +102,16 @@ async function run() {
   await wait(4000);
   await snap(w, "4-back-with-visitor");
 
+  // A visitor carrying a letter: envelope over its head, click opens the letter.
+  const letterText = ["Dear Mochi,", "", "Line two <b>not bold</b>", "Line three"].join("\n");
+  put({ rt_state: snapshot({ guests: [{ ...guest, letter: letterText }] }) });
+  s = await until(w, (x) => x.guests[0]?.envelope === true);
+  check("a visitor with a letter shows an envelope", !!s?.guests[0]?.envelope);
+  await w.webContents.executeJavaScript(`window.__kittyLiveTest.openLetterOf(${JSON.stringify(kiki.code)})`);
+  s = await until(w, (x) => !!x.letter);
+  check("clicking the visitor opens the letter, as plain text", !!s?.letter?.includes("Line two <b>not bold</b>") && !!s.letter.includes("A letter from Sam"), s?.letter?.slice(0, 80));
+  await snap(w, "5-letter");
+
   put({ rt_state: snapshot() });
   s = await until(w, (x) => x.guests.every((g) => g.leaving));
   check("a visitor who leaves walks off", s?.guests.length === 1 && s.guests[0].leaving, JSON.stringify(s?.guests));

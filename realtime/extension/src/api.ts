@@ -32,6 +32,8 @@ export const ext: LiveApi = (g.browser ?? g.chrome)!;
 declare const __SERVER__: string;
 /** Server base URL, injected at build time (KITTY_SERVER). */
 export const SERVER: string = typeof __SERVER__ === "string" ? __SERVER__ : "ws://127.0.0.1:8787";
+/** The public park page on the same host as the server. */
+export const PARK_URL = `${SERVER.replace(/^ws/, "http")}/park/`;
 
 /** Storage keys used only by the live extension. */
 export const K = {

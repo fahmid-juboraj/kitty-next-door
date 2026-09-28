@@ -9,7 +9,7 @@
     "deploy": "npm --prefix .. run build:ext && npm --prefix server run deploy",
     "test": "node tests/run-unit.mjs",
     "test:live": "node --test --test-concurrency=1 tests/live.test.mjs",
-    "test:bg": "node extension/build.mjs && node --test --test-concurrency=1 tests/background.test.mjs",
+    "test:bg": "node extension/build.mjs && node --test --test-concurrency=1 tests/background.test.mjs tests/compat.test.mjs",
     "test:page": "node extension/build.mjs && cd .. && node scripts/run.mjs realtime/tests/content-harness.cjs && node scripts/run.mjs realtime/tests/popup-harness.cjs",
     "server": "npm --prefix server run dev",
     "server:test": "npm --prefix server run dev -- --var STAY_SECONDS:4"

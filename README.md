@@ -44,7 +44,8 @@ Kitty Next Door is a **virtual cat companion** for people who spend long days at
 - 🐾 **Lives on your screen.** It walks, sits, loafs and naps along the bottom of your screen or every web page. Clicks pass straight through it, so it never gets in your way.
 - 👀 **Notices you.** Its eyes follow your cursor, and it slow-blinks at you, which is how cats say "I trust you". Step away and it curls up to sleep; come back and it wakes up to greet you.
 - 💕 **Loves attention.** Rub your mouse over it to pet it and it purrs and shows hearts. Click it for a little "mrrp". Pick it up by the scruff and it looks deeply unimpressed.
-- 💌 **Visits your friends, in real time.** Send your cat with a note and a gift. It walks off your screen and onto theirs, sits with their cat, then comes home.
+- 💌 **Visits your friends, in real time.** Send your cat with a note, a gift and even a **letter**. It walks off your screen and onto theirs, sits with their cat, then comes home.
+- 🌳 **The Kitty Park.** Send your cat to a live [public park](https://kitty-next-door.kittynextdoor.workers.dev/park/) where cats from everywhere play together. One wears the 👑 as Cat of the Hour, and you can make a 📸 postcard to share.
 - 🎨 **Four coats:** Ginger, Grey Tabby, Cream and Midnight.
 - 🔒 **Private by design.** It never reads the pages you visit or what you type.
 
@@ -81,9 +82,17 @@ The Windows app works on Windows 10 and 11 (64-bit). The browser extensions shou
 
 1. Open the extension's popup and copy **your friend code**. It looks like `7K2F-9QXM`.
 2. Send it to a friend. They type it into **Add a friend by code**, and you accept the request.
-3. Next to their name, add a note, pick a gift (🐟 🧶 🌸 🐭) and press **Send**.
+3. Next to their name, add a note, pick a gift (🐟 🧶 🌸 🐭), optionally write or paste a **letter**, and press **Send**.
 4. Your cat walks off your screen and appears on theirs a moment later, even if they're on the other side of the world. If they're offline, it waits at their door and walks in when they're back.
 5. It comes home by itself after a couple of hours. You can also press **Call home**, or they can press **Send home**.
+6. A cat carrying a letter shows a ✉️. Your friend clicks the cat (or opens the popup) to read it and copy it. The letter is deleted when the cat goes home.
+
+## Kitty Park
+
+Open the popup and click **🌳 Send to the Park**. Your cat walks off your screen and into the [Kitty Park](https://kitty-next-door.kittynextdoor.workers.dev/park/), where everyone watching can see it play with cats from all over the world. Cats say hello, have zoomies and nap together on the bench at night.
+- One cat wears the 👑 as **Cat of the Hour**, and its owner gets a notification.
+- Click a cat and press **📸 Postcard** for a shareable picture.
+- Only your cat's name and coat are shown in the park, never your name or friend code. Your cat comes home after an hour, or whenever you press **Call home**.
 
 ## Uninstall
 
@@ -153,6 +162,8 @@ Everything you see is drawn in code, with no image files for the cat. That keeps
 - [x] Windows desktop app: overlay, petting, pick-up, slow blink, greeting when you come back
 - [x] Browser extensions for Chrome, Edge and Firefox
 - [x] Real-time friend visits
+- [x] Letters carried by visiting cats
+- [x] The Kitty Park: a live public park, Cat of the Hour, postcards
 - [ ] Chrome Web Store, Firefox Add-ons and Edge Add-ons listings
 - [ ] Hide automatically during fullscreen apps, meetings and presentations
 - [ ] "Sam is petting your cat 💕" notifications and online status for friends

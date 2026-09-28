@@ -1,5 +1,7 @@
 # Store listing kit: Kitty Next Door Live
 
+> **Submit version 0.1.0 first** (the tested files in `release-upload/v0.1.0/`). The texts below describe 0.1.0. Letters and the Kitty Park arrive in **0.2.0**, which is submitted later as an update. See "Version 0.2.0 update" at the end.
+
 Everything to paste into Firefox Add-ons (AMO) and Microsoft Edge Add-ons (Partner Center). The Chrome Web Store uses the same texts and images.
 
 ## Files to upload
@@ -94,4 +96,33 @@ Friend visits need two browsers, because a cat can only visit a friend:
 Server: wss://kitty-next-door.kittynextdoor.workers.dev (Cloudflare Workers). It exchanges JSON messages only. No remote code is loaded.
 Source code: https://github.com/fahmid-juboraj/kitty-next-door (the extension is in realtime/extension).
 Build from the attached source: `npm ci && npm run build`. The output in realtime/extension/dist/ matches the submitted package byte for byte.
+```
+
+## Version 0.2.0 update (submit after 0.1.0 is approved)
+
+Upload the files from `release-upload/v0.2.0/`, including the new source zip for Firefox. Permissions don't change, and neither do the data categories: letters are covered by "personal communications".
+
+**What's new (paste into the release notes):**
+
+```
+New in 0.2.0:
+• Letters: write or paste a letter when you send your cat. Your friend clicks the cat to read it and can copy it. Letters are deleted when the cat goes home.
+• The Kitty Park: send your cat to a live public park where cats from everywhere play together. One cat each hour wears the crown as Cat of the Hour. Make a postcard to share.
+```
+
+**Add to the description:**
+
+```
+THE KITTY PARK
+Send your cat to a live public park where cats from all over the world play together, and watch it at kitty-next-door.kittynextdoor.workers.dev/park. Only your cat's name and coat are shown there.
+
+LETTERS
+Write or paste a letter when you send your cat. It arrives carrying an envelope, and your friend clicks the cat to read it.
+```
+
+**Add to the reviewer notes:**
+
+```
+Kitty Park: in the popup, click "Send to the Park", then open https://kitty-next-door.kittynextdoor.workers.dev/park/ (link "Watch the park" in the popup). The cat appears there for everyone watching and comes home after an hour or when "Call home" is clicked. The park page shows only the cat's name and coat.
+Letters: in the popup's send options, write a letter, then send the cat to a friend (second profile). The friend's page shows the cat with an envelope; clicking the cat opens the letter as plain text.
 ```

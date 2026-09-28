@@ -96,6 +96,28 @@ async function run() {
   await clickButton("Click again to delete everything");
   check("...and then sends delete_me", lastSent()?.rt?.t === "delete_me");
 
+  // Park and letters.
+  await clickButton("🌳 Send to the Park");
+  check("Send to the Park sends to_park", lastSent()?.rt?.t === "to_park", JSON.stringify(lastSent()));
+  put({ rt_state: snapshot({ where: "park", since: Date.now(), returnAt: Date.now() + 50 * 60_000 }) });
+  await wait(200);
+  check("shows the cat is at the park", (await text("catStatus")) === "Mochi is at the Kitty Park 🌳", await text("catStatus"));
+  check("can't send to the park twice", await js(`document.getElementById("toPark").disabled === true`));
+  check("Watch the park links to the park page", /\/park\/$/.test(await js(`document.getElementById("watchPark").href`)));
+  put({ rt_state: snapshot({ where: "home" }) });
+  await wait(200);
+  await js(`document.getElementById("letter").value = "Hi!\\r\\n\\r\\n\\r\\nSee you soon  "; document.getElementById("letter").dispatchEvent(new Event("input"))`);
+  check("letter counter", (await text("letterCount")) === "20 / 1500", await text("letterCount"));
+  await clickButton("Send Mochi");
+  check("Send includes the cleaned letter", lastSent()?.rt?.letter === "Hi!\n\nSee you soon", JSON.stringify(lastSent()));
+  check("letter box clears after sending", (await js(`document.getElementById("letter").value`)) === "");
+  const withLetter = snapshot({ where: "home" });
+  withLetter.guests[0].letter = "A secret recipe\nstep 1";
+  put({ rt_state: withLetter });
+  await wait(200);
+  await clickButton("📩 Read");
+  check("a visitor's letter can be read in the popup", (await js(`document.querySelector(".letter")?.textContent`)) === "A secret recipe\nstep 1");
+
   put({ rt_deleted: true, rt_state: null });
   await wait(200);
   check("after deletion, offers to start fresh", await js(`!document.getElementById("deletedBox").hidden`));

@@ -16,6 +16,10 @@ class_name = "UserDO"
 name = "STATS"
 class_name = "StatsDO"
 
+[[durable_objects.bindings]]
+name = "PARK"
+class_name = "ParkDO"
+
 # The Workers Free plan only offers SQLite-backed Durable Objects.
 [[migrations]]
 tag = "v1"
@@ -25,6 +29,10 @@ new_sqlite_classes = ["UserDO"]
 tag = "v2"
 new_sqlite_classes = ["StatsDO"]
 
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["ParkDO"]
+
 # Workers Logs: see button clicks and errors in the dashboard (free plan: a few days of history).
 [observability]
 enabled = true
@@ -32,3 +40,5 @@ enabled = true
 [vars]
 # How long a visit lasts before the cat walks home.
 STAY_SECONDS = "7200"
+# How long a trip to the park lasts.
+PARK_STAY_SECONDS = "3600"

@@ -3,10 +3,12 @@
 import assert from "node:assert/strict";
 import { beforeEach, test } from "node:test";
 import { UserCore, type CoreEnv, type PeerApi, type UserRecord } from "../server/src/core";
-import type { Notice, Profile, ServerMsg, Snapshot } from "../shared/protocol";
+import { ParkCore, parkName, type ParkState } from "../server/src/parkcore";
+import type { Cap, Notice, ParkMsg, Profile, ServerMsg, Snapshot } from "../shared/protocol";
 
 let now = 1_000_000;
 const STAY = 60_000;
+const PARK_STAY = 30_000;
 
 interface User {
   code: string;
@@ -19,6 +21,26 @@ interface User {
 
 const world = new Map<string, User>();
 const unreachable = new Set<string>();
+
+// One real park, with fake storage; spectator frames are recorded.
+let parkState: ParkState | undefined;
+let parkFrames: ParkMsg[] = [];
+let parkAlarm: number | null = null;
+let parkDown = false;
+let nextId = 0;
+const park = new ParkCore({
+  load: async () => (parkState ? structuredClone(parkState) : undefined),
+  save: async (s) => { parkState = structuredClone(s); },
+  send: (m) => parkFrames.push(m),
+  owner: (code) => (world.get(code) ?? makeUser(code)).core,
+  setAlarm: async (at) => { parkAlarm = at; },
+  randomId: () => `park${String(nextId++).padStart(8, "0")}`,
+  now: () => now,
+});
+const parkApi = {
+  join: (o: string, p: Profile) => (parkDown ? Promise.reject(new Error("down")) : park.join(o, p)),
+  leave: (id: string) => (parkDown ? Promise.reject(new Error("down")) : park.leave(id)),
+};
 
 function makeUser(code: string): User {
   let rec: UserRecord | undefined;
@@ -33,11 +55,13 @@ function makeUser(code: string): User {
       }
       return (world.get(c) ?? ghost(c)).core;
     },
+    park: () => parkApi,
     send: (m) => u.sent.push(m),
     setAlarm: async (at) => { u.alarm = at; },
     hash: async (t) => `h:${t}`,
     now: () => now,
     stayMs: STAY,
+    parkStayMs: PARK_STAY,
   };
   u.core = new UserCore(env);
   u.record = () => rec;
@@ -51,11 +75,12 @@ function ghost(code: string): User {
 
 const profile = (cat: string, owner = ""): Profile => ({ cat, coat: "ginger", owner });
 
-async function join(code: string, cat: string): Promise<User> {
+/** A signed-in user. `caps` defaults to a current client; pass [] for a 0.1.0 client. */
+async function join(code: string, cat: string, caps: Cap[] = ["letters", "park"]): Promise<User> {
   const u = makeUser(code);
   world.set(code, u);
   assert.equal(await u.core.authenticate(code, u.token, profile(cat, `${cat}'s human`)), true);
-  await u.core.welcome(profile(cat, `${cat}'s human`));
+  await u.core.welcome(profile(cat, `${cat}'s human`), caps);
   return u;
 }
 
@@ -77,6 +102,11 @@ let A: User, B: User, C: User;
 beforeEach(async () => {
   world.clear();
   unreachable.clear();
+  parkState = undefined;
+  parkFrames = [];
+  parkAlarm = null;
+  parkDown = false;
+  nextId = 0;
   now = 1_000_000;
   A = await join("AAAAAAAA", "Mochi");
   B = await join("BBBBBBBB", "Kiki");
@@ -301,4 +331,124 @@ test("at the friend cap: 50 friends, 3 visiting, then delete cleans every one of
     assert.deepEqual(r.guests, {}, c);
     assert.equal(r.cat.where, "home", c);
   }
+});
+
+
+// ---- letters ------------------------------------------------------------------
+
+test("a letter travels with the cat and leaves with it", async () => {
+  await befriend(A, B);
+  const letter = "Dear Kiki,\n\nHere's the recipe you asked for:\n1. flour\n2. love";
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "hi", gift: "fish", letter });
+  assert.equal(lastState(B).guests[0].letter, letter);
+  await A.core.handle({ t: "recall" });
+  assert.deepEqual(B.record()!.guests, {});
+  assert.ok(!JSON.stringify(B.record()).includes("recipe"), "letter is gone from the host's record");
+});
+
+test("a friend on 0.1.0 still gets the visit, and the sender is told the letter didn't arrive", async () => {
+  const old = await join("DDDDDDDD", "Oldie", []);
+  await befriend(A, old);
+  await A.core.handle({ t: "send_cat", to: old.code, msg: "hi", gift: "fish", letter: "secret plans" });
+  assert.equal(lastState(old).guests.length, 1);
+  assert.equal(lastState(old).guests[0].letter, undefined);
+  assert.equal(lastState(A).cat.where, "away");
+  assert.ok(errors(A).includes("letter_not_delivered"));
+  assert.ok(!JSON.stringify(old.record()).includes("secret plans"));
+});
+
+test("no letter, no complaint", async () => {
+  const old = await join("DDDDDDDD", "Oldie", []);
+  await befriend(A, old);
+  await A.core.handle({ t: "send_cat", to: old.code, msg: "hi", gift: "fish" });
+  assert.deepEqual(errors(A), []);
+});
+
+// ---- park -----------------------------------------------------------------------
+
+const parkCats = () => Object.values(parkState?.cats ?? {});
+
+test("to the park and back: the owner's record and the park agree", async () => {
+  await A.core.handle({ t: "to_park" });
+  const cat = lastState(A).cat;
+  assert.equal(cat.where, "park");
+  assert.ok(!("parkId" in cat), "the park entry id stays on the server");
+  assert.equal(A.alarm, now + PARK_STAY);
+  assert.equal(parkCats().length, 1);
+  assert.equal(parkCats()[0].cat, "Mochi");
+  // Spectators never see a friend code.
+  assert.ok(!JSON.stringify(parkFrames).includes(A.code));
+  assert.ok(parkFrames.some((f) => f.t === "join" && f.cat.cat === "Mochi"));
+
+  await A.core.handle({ t: "recall" });
+  assert.equal(lastState(A).cat.where, "home");
+  assert.equal(parkCats().length, 0);
+  assert.ok(parkFrames.some((f) => f.t === "leave"));
+});
+
+test("the park trip timer brings the cat home", async () => {
+  await A.core.handle({ t: "to_park" });
+  now += PARK_STAY + 1;
+  await A.core.alarm();
+  assert.equal(lastState(A).cat.where, "home");
+  assert.equal(parkCats().length, 0);
+  assert.ok(notices(A).some((n) => n.kind === "cat_home" && n.reason === "timeout"));
+});
+
+test("a cat in the park can't also visit a friend", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "to_park" });
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  assert.ok(errors(A).includes("cat_busy"));
+  assert.deepEqual(B.record()!.guests, {});
+});
+
+test("the first cat in an empty park is crowned Cat of the Hour, and its owner hears about it", async () => {
+  await A.core.handle({ t: "to_park" });
+  assert.ok(parkState!.crown);
+  assert.ok(parkFrames.some((f) => f.t === "crown" && f.id === parkState!.crown));
+  assert.ok(notices(A).some((n) => n.kind === "crowned"));
+  await B.core.handle({ t: "to_park" });
+  assert.ok(!notices(B).some((n) => n.kind === "crowned"), "only one crown at a time");
+});
+
+test("a full park turns cats away; they stay home", async () => {
+  for (let i = 0; i < 60; i++) await (await join(`P${String(i).padStart(2, "0")}`.padEnd(8, "Z").replace(/[ILOU]/g, "1"), `C${i}`)).core.handle({ t: "to_park" });
+  assert.equal(parkCats().length, 60);
+  await A.core.handle({ t: "to_park" });
+  assert.ok(errors(A).includes("park_full"));
+  assert.equal(lastState(A).cat.where, "home");
+});
+
+test("the park drops ghosts: cats whose owners think they're home", async () => {
+  await A.core.handle({ t: "to_park" });
+  parkDown = true; // the leave call is lost
+  await A.core.handle({ t: "recall" });
+  parkDown = false;
+  assert.equal(parkCats().length, 1);
+  await park.alarm();
+  assert.equal(parkCats().length, 0);
+});
+
+test("deleting your account takes your cat out of the park", async () => {
+  await A.core.handle({ t: "to_park" });
+  await A.core.handle({ t: "delete_me" });
+  assert.equal(parkCats().length, 0);
+});
+
+test("park moderation: kicked and blocked cats can't come back", async () => {
+  await A.core.handle({ t: "to_park" });
+  const [id] = Object.keys(parkState!.cats);
+  assert.equal(await park.kick(id, true), true);
+  assert.equal(parkCats().length, 0);
+  await A.core.handle({ t: "recall" });
+  await A.core.handle({ t: "to_park" });
+  assert.ok(errors(A).includes("park_full"));
+  assert.equal(parkCats().length, 0);
+});
+
+test("park names: rude names are replaced by the coat", () => {
+  assert.equal(parkName({ cat: "Mochi", coat: "ginger", owner: "" }), "Mochi");
+  assert.equal(parkName({ cat: "sh1t head", coat: "black", owner: "" }), "Midnight cat");
+  assert.equal(parkName({ cat: "F.U.C.K", coat: "grey", owner: "" }), "Grey Tabby cat");
 });

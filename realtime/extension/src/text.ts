@@ -23,6 +23,8 @@ const ERRORS: Record<ErrorCode, (who: string, myCat: string) => string> = {
   cat_busy: (_w, cat) => `${cat} is already out visiting.`,
   host_full: (who) => `${who} already has 3 visiting cats.`,
   unreachable: () => "Couldn't reach the server. Try again.",
+  park_full: () => "The park is full right now. Try again in a little while.",
+  letter_not_delivered: (who) => `${who}'s extension needs an update to read letters. Your cat still visited, without the letter.`,
 };
 
 /** One line for a toast, or null when a notice needs no toast. */
@@ -34,7 +36,9 @@ export function describeNotice(n: Notice, state: Snapshot | null): string | null
     case "friend_added": return `💛 You and ${who} are friends now!`;
     case "guest_arrived": return `🐾 ${catOf(n.who)} came to visit from ${who}!`;
     case "guest_left": return `${catOf(n.who)} went home.`;
+    case "crowned": return `👑 ${myCat} is Cat of the Hour at the Kitty Park!`;
     case "cat_home":
+      if (!n.who && (n.reason === "timeout" || n.reason === "recalled")) return `🏠 ${myCat} came back from the park.`;
       if (n.reason === "sent_home") return `🏠 ${who} sent ${myCat} home.`;
       if (n.reason === "timeout") return `🏠 ${myCat} came back from ${who}'s.`;
       if (n.reason === "unfriended") return `🏠 ${myCat} came home.`;

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kitty Park · live cats from everywhere</title>
+    <meta name="description" content="A live park where cats from all over the world come to play. Send yours from the Kitty Next Door extension." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Kitty Park 🌳 live cats from everywhere" />
+    <meta property="og:description" content="Watch cats from all over the world play together, and send yours to join them." />
+    <meta property="og:image" content="%SITE%og-park.png" />
+    <meta property="og:url" content="%SITE%park/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="../icon-48.png" />
+    <style>
+      :root { --ink: #3b2b27; --card: rgba(255, 250, 243, 0.94); --accent: #f7ad63; --muted: #7a6660; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #7ec3f2; color: var(--ink);
+        font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      canvas { position: fixed; inset: 0; display: block; touch-action: none; }
+      #fx { z-index: 1; }
+      .hud { position: fixed; left: 16px; top: 16px; z-index: 2; display: flex; flex-direction: column; gap: 10px; max-width: min(360px, calc(100vw - 32px)); }
+      .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; text-decoration: none; color: var(--ink);
+        background: var(--card); border: 2px solid var(--ink); border-radius: 999px; padding: 4px 12px 4px 6px; width: fit-content; }
+      .brand img { width: 26px; height: 26px; }
+      .card { background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 12px 16px; box-shadow: 0 4px 0 var(--ink); }
+      .card h1 { margin: 0 0 2px; font-size: 22px; }
+      .card p { margin: 0; }
+      #live { font-size: 12px; color: var(--muted); }
+      .actions { position: fixed; right: 16px; top: 16px; z-index: 2; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+      button, .btn { font: 700 15px system-ui, sans-serif; padding: 9px 14px; border-radius: 12px; border: 2px solid var(--ink);
+        background: var(--card); color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 var(--ink); text-decoration: none; }
+      button.primary, .btn.primary { background: var(--accent); }
+      button:active, .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+      #bringPanel { position: fixed; right: 16px; top: 72px; z-index: 3; width: min(340px, calc(100vw - 32px)); }
+      #bringPanel h2 { margin: 0 0 6px; font-size: 17px; }
+      #bringPanel ol { margin: 0 0 10px; padding-left: 20px; }
+      #bringPanel .get { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      #bringPanel .get a { text-align: center; font-size: 14px; padding: 8px; }
+      #closeBring { position: absolute; right: 10px; top: 8px; box-shadow: none; border: 0; background: none; font-size: 18px; padding: 2px 6px; }
+      .tip { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 2; font-size: 12px; color: #fff;
+        text-shadow: 0 1px 2px rgba(0,0,0,.5); pointer-events: none; white-space: nowrap; }
+      [hidden] { display: none !important; }
+      @media (max-width: 600px) {
+        .card h1 { font-size: 18px; }
+        .actions { top: auto; bottom: 14px; left: 12px; right: 12px; justify-content: center; flex-wrap: nowrap; }
+        .actions button { font-size: 14px; padding: 8px 12px; }
+        #bringPanel { top: auto; bottom: 70px; right: 16px; }
+        .tip { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bg"></canvas>
+    <canvas id="fx"></canvas>
+
+    <div class="hud">
+      <a class="brand" href="../"><img src="../icon-48.png" alt="" />Kitty Next Door</a>
+      <div class="card">
+        <h1>Kitty Park 🌳</h1>
+        <p id="count">Opening the gates…</p>
+        <p id="crown" hidden>👑 Cat of the Hour: <b id="crownName"></b></p>
+        <span id="live">○ connecting…</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="postcard" type="button">📸 Postcard</button>
+      <button id="bring" class="primary" type="button">🐾 Bring your cat</button>
+    </div>
+
+    <div id="bringPanel" class="card" hidden>
+      <button id="closeBring" type="button" aria-label="Close">✕</button>
+      <h2>Bring your cat to the park</h2>
+      <ol>
+        <li>Open the <b>Kitty Next Door</b> extension (the cat icon in your toolbar).</li>
+        <li>Under <b>Your cat</b>, click <b>🌳 Send to the Park</b>.</li>
+        <li>Watch it walk in here, and find it by name!</li>
+      </ol>
+      <p style="margin:0 0 8px">Don't have it yet? It's free:</p>
+      <div class="get">
+        <a class="btn primary" href="%CHROME%">Chrome</a>
+        <a class="btn" href="%EDGE%">Edge</a>
+        <a class="btn" href="%FIREFOX%">Firefox</a>
+        <a class="btn" href="%WINDOWS%">Windows</a>
+      </div>
+    </div>
+
+    <p class="tip">Rub a cat to pet it · drag to pick one up · tap a cat, then 📸, for its postcard</p>
+    <script src="park.js"></script>
+    <!-- Cloudflare Web Analytics: cookieless page-view counts -->
+    <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "2c06dc2ad3a043a5af06f7cd8f24d560"}'></script>
+  </body>
+</html>

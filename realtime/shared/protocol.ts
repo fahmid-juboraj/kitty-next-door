@@ -7,7 +7,13 @@ import { cleanText, GIFTS, LIMITS, type GiftId } from "../../src/core/visit";
 export const CODE_RE = /^[0-9A-HJKMNP-TV-Z]{8}$/;
 /** 32 random bytes, base64url. */
 export const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
-export const MAX_FRAME = 2048;
+// Fits a full letter even when every character needs escaping (see protocol tests).
+export const MAX_FRAME = 8192;
+/** Letters travel with a visiting cat: plain text, line breaks kept. */
+export const LETTER_MAX = 1500;
+/** Optional features a client understands; old clients send none. */
+export const CAPS_KNOWN = ["letters", "park"] as const;
+export type Cap = (typeof CAPS_KNOWN)[number];
 
 export const CAPS = {
   friends: 50,
@@ -16,6 +22,7 @@ export const CAPS = {
   /** Per rolling hour. */
   friendRequestsPerHour: 10,
   sendsPerHour: 20,
+  parkCats: 60,
 } as const;
 
 /** Normalize user-typed codes: case, dashes/spaces, and look-alike letters. */
@@ -44,17 +51,41 @@ export function sanitizeProfile(raw: unknown): Profile | null {
   return { cat, coat, owner: cleanText(r.owner, LIMITS.from) };
 }
 
+// Control, zero-width and bidi-override characters, as code point ranges. Line feeds are allowed.
+const LETTER_UNSAFE: [number, number][] = [
+  [0x0000, 0x0009], [0x000b, 0x001f], [0x007f, 0x009f], [0x200b, 0x200f], [0x202a, 0x202e], [0x2060, 0x2069], [0xfeff, 0xfeff],
+];
+
+/** Clean a letter: keep line breaks, strip unsafe characters, at most one blank line in a row. */
+export function cleanLetter(input: unknown): string {
+  if (typeof input !== "string") return "";
+  const kept = Array.from(input.replace(/\r\n?/g, "\n").replace(/\t/g, "  "))
+    .filter((ch) => {
+      const cp = ch.codePointAt(0)!;
+      return !LETTER_UNSAFE.some(([a, b]) => cp >= a && cp <= b);
+    })
+    .join("")
+    .split("\n").map((l) => l.replace(/\s+$/, "")).join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return Array.from(kept).slice(0, LETTER_MAX).join("");
+}
+
+const capsOf = (raw: unknown): Cap[] =>
+  Array.isArray(raw) ? CAPS_KNOWN.filter((c) => raw.includes(c)) : [];
+
 const giftOf = (g: unknown): GiftId => (typeof g === "string" && Object.hasOwn(GIFTS, g) ? (g as GiftId) : "fish");
 
 // ---- client -> server --------------------------------------------------------
 
 export type ClientMsg =
-  | { t: "hello"; token: string; profile: Profile }
+  | { t: "hello"; token: string; profile: Profile; caps: Cap[] }
   | { t: "profile"; profile: Profile }
   | { t: "friend_request"; code: string }
   | { t: "friend_respond"; code: string; accept: boolean }
   | { t: "unfriend"; code: string }
-  | { t: "send_cat"; to: string; msg: string; gift: GiftId }
+  | { t: "send_cat"; to: string; msg: string; gift: GiftId; letter?: string }
+  | { t: "to_park" }
   | { t: "recall" }
   | { t: "send_home"; owner: string }
   | { t: "delete_me" };
@@ -72,7 +103,8 @@ export function parseClientMsg(raw: unknown): ClientMsg | null {
   switch (m.t) {
     case "hello": {
       const profile = sanitizeProfile(m.profile);
-      return typeof m.token === "string" && TOKEN_RE.test(m.token) && profile ? { t: "hello", token: m.token, profile } : null;
+      return typeof m.token === "string" && TOKEN_RE.test(m.token) && profile
+        ? { t: "hello", token: m.token, profile, caps: capsOf(m.caps) } : null;
     }
     case "profile": {
       const profile = sanitizeProfile(m.profile);
@@ -89,7 +121,9 @@ export function parseClientMsg(raw: unknown): ClientMsg | null {
     }
     case "send_cat": {
       const to = normCode(m.to);
-      return to ? { t: "send_cat", to, msg: cleanText(m.msg, LIMITS.msg), gift: giftOf(m.gift) } : null;
+      if (!to) return null;
+      const letter = cleanLetter(m.letter);
+      return { t: "send_cat", to, msg: cleanText(m.msg, LIMITS.msg), gift: giftOf(m.gift), ...(letter ? { letter } : {}) };
     }
     case "send_home": {
       const owner = normCode(m.owner);
@@ -97,6 +131,7 @@ export function parseClientMsg(raw: unknown): ClientMsg | null {
     }
     case "recall":
     case "delete_me":
+    case "to_park":
       return { t: m.t };
     default:
       return null;
@@ -116,12 +151,15 @@ export interface Guest {
   msg: string;
   gift: GiftId;
   since: number;
+  /** Present only if the guest brought one. */
+  letter?: string;
 }
 
 export type CatWhere =
   | { where: "home" }
   | { where: "traveling"; to: string }
-  | { where: "away"; at: string; since: number; returnAt: number };
+  | { where: "away"; at: string; since: number; returnAt: number }
+  | { where: "park"; since: number; returnAt: number };
 
 export interface Snapshot {
   me: { code: string; profile: Profile };
@@ -133,13 +171,14 @@ export interface Snapshot {
 }
 
 export type NoticeKind =
-  | "friend_request" | "friend_added" | "guest_arrived" | "guest_left" | "cat_home" | "error";
+  | "friend_request" | "friend_added" | "guest_arrived" | "guest_left" | "cat_home" | "error" | "crowned";
 
 export type HomeReason = "recalled" | "sent_home" | "timeout" | "unfriended" | "host_left";
 
 export type ErrorCode =
   | "bad_message" | "not_authed" | "bad_token" | "no_such_cat" | "self" | "not_friends" | "already_friends"
-  | "too_many_friends" | "too_many_pending" | "rate_limited" | "cat_busy" | "host_full" | "unreachable";
+  | "too_many_friends" | "too_many_pending" | "rate_limited" | "cat_busy" | "host_full" | "unreachable"
+  | "park_full" | "letter_not_delivered";
 
 export interface Notice {
   kind: NoticeKind;
@@ -173,6 +212,7 @@ function sanitizeCat(raw: unknown): CatWhere {
     const to = normCode(r.to);
     if (to) return { where: "traveling", to };
   }
+  if (r.where === "park") return { where: "park", since: num(r.since), returnAt: num(r.returnAt) };
   return { where: "home" };
 }
 
@@ -182,14 +222,18 @@ function sanitizeGuest(raw: unknown): Guest | null {
   const owner = normCode(r.owner);
   const profile = sanitizeProfile(r.profile);
   if (!owner || !profile) return null;
-  return { owner, profile, msg: cleanText(r.msg, LIMITS.msg), gift: giftOf(r.gift), since: num(r.since) };
+  const guest: Guest = { owner, profile, msg: cleanText(r.msg, LIMITS.msg), gift: giftOf(r.gift), since: num(r.since) };
+  const letter = cleanLetter(r.letter);
+  if (letter) guest.letter = letter;
+  return guest;
 }
 
 const ERRORS: ErrorCode[] = [
   "bad_message", "not_authed", "bad_token", "no_such_cat", "self", "not_friends", "already_friends",
   "too_many_friends", "too_many_pending", "rate_limited", "cat_busy", "host_full", "unreachable",
+  "park_full", "letter_not_delivered",
 ];
-const KINDS: NoticeKind[] = ["friend_request", "friend_added", "guest_arrived", "guest_left", "cat_home", "error"];
+const KINDS: NoticeKind[] = ["friend_request", "friend_added", "guest_arrived", "guest_left", "cat_home", "error", "crowned"];
 const REASONS: HomeReason[] = ["recalled", "sent_home", "timeout", "unfriended", "host_left"];
 
 /** Client-side validation of whatever the server sent. */
@@ -232,4 +276,63 @@ export function parseServerMsg(raw: unknown): ServerMsg | null {
     return { t: "notice", notice };
   }
   return null;
+}
+
+// ---- park (public, read-only spectators) ------------------------------------
+
+/** What anyone watching the park sees: an opaque id, a name and a coat. Never a friend code. */
+export interface ParkCat {
+  id: string;
+  cat: string;
+  coat: string;
+  since: number;
+}
+
+export type ParkMsg =
+  | { t: "park"; cats: ParkCat[]; crown: string | null }
+  | { t: "join"; cat: ParkCat }
+  | { t: "leave"; id: string }
+  | { t: "crown"; id: string | null };
+
+export const PARK_ID_RE = /^[a-z0-9]{12}$/;
+
+function sanitizeParkCat(raw: unknown): ParkCat | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const id = typeof r.id === "string" && PARK_ID_RE.test(r.id) ? r.id : null;
+  const cat = cleanText(r.cat, LIMITS.name);
+  const coat = typeof r.coat === "string" && Object.hasOwn(COATS, r.coat) ? r.coat : null;
+  return id && cat && coat ? { id, cat, coat, since: num(r.since) } : null;
+}
+
+export function parseParkMsg(raw: unknown): ParkMsg | null {
+  if (typeof raw !== "string" || raw.length > 64 * 1024) return null;
+  let m: Record<string, unknown>;
+  try {
+    m = JSON.parse(raw);
+    if (!m || typeof m !== "object") return null;
+  } catch {
+    return null;
+  }
+  const crownId = (v: unknown) => (typeof v === "string" && PARK_ID_RE.test(v) ? v : null);
+  switch (m.t) {
+    case "park":
+      return {
+        t: "park",
+        cats: Array.isArray(m.cats) ? m.cats.slice(0, CAPS.parkCats).map(sanitizeParkCat).filter((c): c is ParkCat => !!c) : [],
+        crown: crownId(m.crown),
+      };
+    case "join": {
+      const cat = sanitizeParkCat(m.cat);
+      return cat ? { t: "join", cat } : null;
+    }
+    case "leave": {
+      const id = crownId(m.id);
+      return id ? { t: "leave", id } : null;
+    }
+    case "crown":
+      return { t: "crown", id: crownId(m.id) };
+    default:
+      return null;
+  }
 }

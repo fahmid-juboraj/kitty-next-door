@@ -63,7 +63,7 @@ async function connect(): Promise<void> {
   ws = sock;
 
   sock.onopen = async () => {
-    sock.send(JSON.stringify({ t: "hello", token: id.token, profile: await profile() }));
+    sock.send(JSON.stringify({ t: "hello", token: id.token, profile: await profile(), caps: ["letters", "park"] }));
   };
   sock.onmessage = async (e) => {
     if (e.data === "pong") return;
