@@ -1,0 +1,4 @@
+node_modules/
+dist/
+art/selftest-*.png
+release/
