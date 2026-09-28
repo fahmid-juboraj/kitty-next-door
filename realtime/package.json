@@ -5,6 +5,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p server",
     "build": "node extension/build.mjs",
+    "build:prod": "node extension/build.mjs --prod",
+    "deploy": "npm --prefix .. run build:ext && npm --prefix server run deploy",
     "test": "node tests/run-unit.mjs",
     "test:live": "node --test --test-concurrency=1 tests/live.test.mjs",
     "test:bg": "node extension/build.mjs && node --test --test-concurrency=1 tests/background.test.mjs",

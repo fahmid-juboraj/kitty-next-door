@@ -61,25 +61,23 @@ From `realtime/`. The last three need the local server running as `npm run serve
 | `npm run test:bg` | Builds, then runs two copies of the real background script talking through the local server. Includes "a deleted account stays deleted" |
 | `npm run test:page` | Builds, then checks the page (your cat walks off and back, visitors come and go, toasts, no double cats) and every popup button |
 
-## Going live on Cloudflare (free)
+## Live deployment
 
-Run these yourself, in your own terminal. Never paste Cloudflare tokens into a chat.
+The Worker is deployed at **https://kitty-next-door.kittynextdoor.workers.dev**. One Worker serves:
+- the landing site: `/` and `/visit/` (the static files in `../dist-site`, built by `npm run build:ext` in the repo root);
+- the live server: `wss://kitty-next-door.kittynextdoor.workers.dev/v1/connect/<FRIENDCODE>`.
 
-```sh
-cd realtime/server
-npx wrangler login        # opens the browser to sign in to your free Cloudflare account
-npx wrangler deploy       # prints your URL, like https://kitty-next-door-live.<you>.workers.dev
-```
-
-Then build the extension for that server (use `wss://` with the same host):
+To redeploy after changes, sign in once with `npx wrangler login` in your own terminal, then run this from `realtime/`:
 
 ```sh
-cd realtime
-KITTY_SERVER=wss://kitty-next-door-live.<you>.workers.dev npm run build
-# PowerShell: $env:KITTY_SERVER="wss://..."; npm run build
+npm run deploy          # builds the site, then deploys site + server together
+npm run build:prod      # extension packages for the live server -> extension/dist/*.zip
+node tests/smoke.mjs    # end-to-end check against the live server; cleans up after itself
 ```
 
-The store zips are in `extension/dist/`. Chrome Web Store charges a one-time $5 fee; Edge Add-ons and Firefox Add-ons are free. The stores ask for a privacy policy, so link [PRIVACY.md](PRIVACY.md) once it's online.
+Always deploy from `realtime/` (or `realtime/server/`). Running `wrangler deploy` in the repo root makes Wrangler invent its own config and publish the wrong folder.
+
+Chrome Web Store charges a one-time $5 fee; Edge Add-ons and Firefox Add-ons are free. The stores ask for a privacy policy, so link [PRIVACY.md](PRIVACY.md) once the code is on GitHub.
 
 ### Cost
 - The Workers Free plan includes Durable Objects (SQLite storage) and 100,000 requests a day.

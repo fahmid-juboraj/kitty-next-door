@@ -1,6 +1,7 @@
 // Builds Kitty Next Door Live for Chrome, Edge and Firefox, plus store zips.
 //   node build.mjs                          -> dev build, server ws://127.0.0.1:8787
-//   KITTY_SERVER=wss://<your-worker> node build.mjs   -> production build
+//   node build.mjs --prod                    -> production build (the deployed Worker)
+//   KITTY_SERVER=wss://<host> node build.mjs -> any other server
 import { build } from "esbuild";
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -11,7 +12,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.join(here, "..", "..");
 const dist = path.join(here, "dist");
 const pkg = JSON.parse(readFileSync(path.join(repo, "package.json"), "utf8"));
-const server = (process.env.KITTY_SERVER ?? "ws://127.0.0.1:8787").replace(/\/+$/, "");
+const PROD_SERVER = "wss://kitty-next-door.kittynextdoor.workers.dev";
+const server = (process.env.KITTY_SERVER ?? (process.argv.includes("--prod") ? PROD_SERVER : "ws://127.0.0.1:8787")).replace(/\/+$/, "");
 if (!/^wss?:\/\/[^/]+$/.test(server)) throw new Error(`KITTY_SERVER must look like wss://host, got ${server}`);
 const insecureDev = server.startsWith("ws://");
 

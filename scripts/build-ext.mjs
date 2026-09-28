@@ -8,7 +8,7 @@ import path from "node:path";
 import { deflateRawSync } from "node:zlib";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-const visitBase = process.env.KITTY_VISIT_BASE ?? "https://fahmid-juboraj.github.io/kitty-next-door/visit/";
+const visitBase = process.env.KITTY_VISIT_BASE ?? "https://kitty-next-door.kittynextdoor.workers.dev/visit/";
 const define = { __VISIT_BASE__: JSON.stringify(visitBase) };
 const common = { bundle: true, format: "iife", platform: "browser", target: "es2022", define, logLevel: "warning" };
 
@@ -63,7 +63,7 @@ for (const browser of ["chrome", "firefox"]) {
   writeZip(out, path.join("dist-ext", `kitty-next-door-${browser}-${pkg.version}.zip`));
 }
 
-// Landing site (GitHub Pages): / and /visit/
+// Landing site (Cloudflare Workers, see realtime/server): / and /visit/
 mkdirSync("dist-site/visit", { recursive: true });
 await build({ ...common, entryPoints: { visit: "src/site/visit.ts" }, outdir: "dist-site/visit" });
 cpSync("src/site/visit.html", "dist-site/visit/index.html");

@@ -18,7 +18,7 @@ To try it locally, run `npm run build:ext`, then:
 - **Chrome/Edge:** open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and pick `dist-ext/chrome`.
 - **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `dist-ext/firefox/manifest.json`.
 
-Store zips are written to `dist-ext/*.zip`. Visit links point at `https://fahmid-juboraj.github.io/kitty-next-door/visit/`. Publish `dist-site/` there with GitHub Pages, or set `KITTY_VISIT_BASE` when building.
+Store zips are written to `dist-ext/*.zip`. Visit links point at `https://kitty-next-door.kittynextdoor.workers.dev/visit/`. That landing site is served by the same Cloudflare Worker as the live server (see `realtime/README.md`). Set `KITTY_VISIT_BASE` when building to use another address.
 
 ## Download (Windows 10/11)
 

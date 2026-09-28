@@ -1,6 +1,12 @@
-name = "kitty-next-door-live"
+name = "kitty-next-door"
 main = "src/index.ts"
 compatibility_date = "2026-09-01"
+
+# The landing site (/, /visit/) is served as static files from this same
+# Worker. Build it first with `npm run build:ext` in the repo root.
+# Anything that isn't a file (like /v1/connect/...) goes to the Worker code.
+[assets]
+directory = "../../dist-site"
 
 [[durable_objects.bindings]]
 name = "USERS"
