@@ -7,7 +7,8 @@
     <meta name="description" content="A friend sent their cat to visit you. Kitty Next Door is a cat that lives on your screen and keeps you company." />
     <meta property="og:title" content="A cat came to visit you 🐾" />
     <meta property="og:description" content="A friend sent their cat to keep you company for a day." />
-    <meta property="og:image" content="../og.png" />
+    <meta property="og:image" content="%SITE%og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="../icon-48.png" />
     <style>
       :root { --bg: #fdf4e8; --ink: #3b2b27; --muted: #7a6660; --card: #fffaf3; --line: #ead9c6; --accent: #f7ad63; }
@@ -48,11 +49,12 @@
       <div class="cta">
         <p>Want a cat of your own that keeps you company while you work, and can visit your friends too?</p>
         <div class="buttons">
-          <a class="primary" id="getChrome" href="#">Get it for Chrome</a>
-          <a id="getFirefox" href="#">Firefox</a>
-          <a id="getEdge" href="#">Edge</a>
-          <a id="getWindows" href="#">Windows app</a>
+          <a class="primary" href="%CHROME%">Add to Chrome</a>
+          <a href="%EDGE%">Microsoft Edge</a>
+          <a href="%FIREFOX%">Firefox</a>
+          <a href="%WINDOWS%">Windows app</a>
         </div>
+        <p style="margin-top:14px"><a href="%SITE%" style="color:var(--muted)">What is Kitty Next Door?</a></p>
       </div>
     </main>
     <div id="stage"></div>

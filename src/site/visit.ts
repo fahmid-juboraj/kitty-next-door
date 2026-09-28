@@ -2,15 +2,10 @@
 // cat walks onto this page and delivers its note. If the extension is
 // installed it takes over (it marks <html data-kitty-next-door>).
 import { COATS, DEFAULT_COAT } from "../core/coats";
-import { REPO_URL } from "../core/config";
 import { GIFTS, parseVisitFragment } from "../core/visit";
 import { Bubble, CatActor, startLoop } from "../web/actor";
 
 const $ = (id: string) => document.getElementById(id)!;
-
-for (const id of ["getChrome", "getFirefox", "getEdge", "getWindows"]) {
-  (document.getElementById(id) as HTMLAnchorElement).href = `${REPO_URL}#download-windows-1011`;
-}
 
 function render(): void {
   const visit = parseVisitFragment(location.hash);

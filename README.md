@@ -2,7 +2,36 @@
 
 A small cat that lives on your desktop and keeps you company. It naps and wanders along the top of your taskbar. Sometimes it sits and watches you, and it's happy to see you when you come back.
 
-![All poses and coats](art/gallery.png)
+![Your cat and a visiting friend's cat sitting together in a browser window](art/hero.png)
+
+**Website:** https://kitty-next-door.kittynextdoor.workers.dev
+
+## Install
+
+Store listings are on the way. Until then, every version installs from this repo's [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest).
+
+### Install on Chrome
+1. Download `kitty-next-door-live-chrome-<version>.zip` from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest) and unzip it.
+2. Open `chrome://extensions` and turn on **Developer mode** (top right).
+3. Click **Load unpacked** and choose the unzipped folder.
+4. Click the puzzle-piece icon, then pin **Kitty Next Door Live**. Your friend code is in its popup.
+
+### Install on Microsoft Edge
+1. Download `kitty-next-door-live-edge-<version>.zip` from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest) and unzip it.
+2. Open `edge://extensions` and turn on **Developer mode** (left side).
+3. Click **Load unpacked** and choose the unzipped folder.
+
+### Install on Firefox
+1. Download `kitty-next-door-live-firefox-<version>.zip` from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest).
+2. Open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and choose the zip. Firefox 140 or newer is needed.
+3. Firefox removes temporary add-ons when it restarts. The permanent version arrives with the Firefox Add-ons listing.
+
+### Install the Windows app
+1. Download `Kitty-Next-Door-Setup-<version>.exe` (installer) or `Kitty-Next-Door-Portable-<version>.exe` (no install) from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest).
+2. The app isn't code-signed yet, so Windows shows "Windows protected your PC". Click **More info → Run anyway**.
+3. The cat appears at the bottom of your screen. Use the tray icon to hide it, start it with Windows, or quit.
+
+Use just one browser extension per browser: either **Kitty Next Door Live** (real-time visits, recommended) or the link-based **Kitty Next Door**.
 
 ## Browser extension (Chrome, Edge, Firefox)
 
@@ -19,14 +48,6 @@ To try it locally, run `npm run build:ext`, then:
 - **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `dist-ext/firefox/manifest.json`.
 
 Store zips are written to `dist-ext/*.zip`. Visit links point at `https://kitty-next-door.kittynextdoor.workers.dev/visit/`. That landing site is served by the same Cloudflare Worker as the live server (see `realtime/README.md`). Set `KITTY_VISIT_BASE` when building to use another address.
-
-## Download (Windows 10/11)
-
-Grab one of these from the Releases page:
-- `Kitty-Next-Door-Setup-x.y.z.exe` installs it and adds it to the Start menu.
-- `Kitty-Next-Door-Portable-x.y.z.exe` runs without installing.
-
-The app isn't code-signed yet, so Windows will show "Windows protected your PC". Click **More info → Run anyway**. macOS and Linux builds are coming.
 
 ## Run from source
 
@@ -74,6 +95,8 @@ Clicks pass straight through everything except the cat itself, and clicking the 
 - **Pick-up:** drag it up and let go.
 
 ## How it's built
+
+![All poses and coats](art/gallery.png)
 
 ```
 src/core/      Pure TypeScript: no DOM, no Electron

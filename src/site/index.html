@@ -3,29 +3,179 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kitty Next Door</title>
-    <meta name="description" content="A cat that lives on your screen, keeps you company, and can visit your friends." />
+    <title>Kitty Next Door · a cat that keeps you company</title>
+    <meta name="description" content="A little cat that lives on your screen, keeps you company, and walks over to visit your friends. Free for Chrome, Edge, Firefox and Windows." />
+    <meta property="og:type" content="website" />
     <meta property="og:title" content="Kitty Next Door" />
-    <meta property="og:description" content="A cat that lives on your screen, keeps you company, and can visit your friends." />
-    <meta property="og:image" content="og.png" />
+    <meta property="og:description" content="A cat that keeps you company, and walks over to visit your friends." />
+    <meta property="og:image" content="%SITE%og.png" />
+    <meta property="og:url" content="%SITE%" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="icon-48.png" />
     <style>
-      :root { --bg: #fdf4e8; --ink: #3b2b27; --muted: #7a6660; --card: #fffaf3; --accent: #f7ad63; }
-      @media (prefers-color-scheme: dark) { :root { --bg: #1d1816; --ink: #f4e9df; --muted: #b9a79c; --card: #2a2320; } }
-      body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-      main { max-width: 760px; margin: 0 auto; padding: 56px 16px; text-align: center; }
-      h1 { font-size: clamp(32px, 7vw, 48px); margin: 0 0 8px; }
-      p { color: var(--muted); margin: 0 0 24px; }
-      img { max-width: 100%; border-radius: 16px; border: 2px solid var(--ink); }
-      a { color: var(--ink); font-weight: 600; }
+      :root {
+        --bg: #fdf4e8; --ink: #3b2b27; --muted: #7a6660; --card: #fffaf3; --line: #ead9c6;
+        --accent: #f7ad63; --accent-ink: #3b2b27; --soft: #f6e6d2;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #1d1816; --ink: #f4e9df; --muted: #b9a79c; --card: #2a2320; --line: #3d3330; --soft: #26201d;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      a { color: inherit; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+      header.top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; text-decoration: none; }
+      .brand img { width: 34px; height: 34px; }
+      .top nav a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 15px; }
+      .top nav a:hover { color: var(--ink); }
+
+      .hero { display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; align-items: center; padding: 40px 0 56px; }
+      .eyebrow { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        color: var(--muted); border: 2px solid var(--line); border-radius: 999px; padding: 4px 12px; margin-bottom: 18px; }
+      h1 { font-size: clamp(36px, 5.2vw, 58px); line-height: 1.05; margin: 0 0 18px; letter-spacing: -.02em; }
+      .lead { font-size: 19px; color: var(--muted); margin: 0 0 26px; max-width: 34ch; }
+      .hero img { width: 100%; height: auto; display: block; }
+
+      .get { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 460px; }
+      .btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 16px; border-radius: 14px;
+        border: 2px solid var(--ink); background: var(--card); color: var(--ink); font-weight: 700; font-size: 16px;
+        text-decoration: none; box-shadow: 0 4px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+      .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 var(--ink); }
+      .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+      .btn.primary { background: var(--accent); color: var(--accent-ink); grid-column: 1 / -1; font-size: 18px; padding: 14px 18px; }
+      .btn svg { width: 22px; height: 22px; flex: none; }
+      .fine { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
+
+      section { padding: 56px 0; }
+      h2 { font-size: clamp(26px, 3.4vw, 36px); margin: 0 0 8px; letter-spacing: -.01em; }
+      .sub { color: var(--muted); margin: 0 0 28px; }
+      .features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+      .card { background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 20px; box-shadow: 0 5px 0 var(--ink); }
+      .card .ico { font-size: 28px; line-height: 1; margin-bottom: 12px; }
+      .card h3 { margin: 0 0 6px; font-size: 18px; }
+      .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+      .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: step; }
+      .step { position: relative; padding: 22px 20px 20px; border-radius: 18px; background: var(--soft); }
+      .step::before { counter-increment: step; content: counter(step); display: grid; place-items: center; width: 34px; height: 34px;
+        border-radius: 50%; background: var(--accent); color: var(--accent-ink); border: 2px solid var(--ink); font-weight: 800; margin-bottom: 12px; }
+      .step h3 { margin: 0 0 6px; font-size: 18px; }
+      .step p { margin: 0; color: var(--muted); font-size: 15px; }
+      code.code { font: 700 15px ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .06em; background: var(--card);
+        border: 1.5px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+
+      .final { text-align: center; background: var(--card); border: 2px solid var(--ink); border-radius: 24px; padding: 40px 20px; box-shadow: 0 6px 0 var(--ink); }
+      .final .get { margin: 22px auto 0; }
+      footer { padding: 36px 0 200px; color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
+      footer a { color: var(--muted); }
+      .pet-hint { position: fixed; left: 16px; bottom: 16px; font-size: 13px; color: var(--muted); pointer-events: none;
+        background: var(--card); border: 1.5px solid var(--line); border-radius: 999px; padding: 4px 12px; transition: opacity .3s; z-index: 5; }
+      .pet-hint.gone { opacity: 0; }
+      #stage { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+      @media (max-width: 900px) {
+        .hero { grid-template-columns: 1fr; padding-top: 16px; }
+        .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .steps { grid-template-columns: 1fr; }
+        .top nav { display: none; }
+      }
+      @media (max-width: 520px) {
+        .features { grid-template-columns: 1fr; }
+        .get { grid-template-columns: 1fr; }
+        .pet-hint { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
     </style>
   </head>
   <body>
-    <main>
-      <h1>Kitty Next Door</h1>
-      <p>A cat that lives on your screen, keeps you company, and can visit your friends.</p>
-      <img src="gallery.png" alt="The cat in all its poses and coats" />
-      <p style="margin-top:24px"><a href="https://github.com/fahmid-juboraj/kitty-next-door">Get it on GitHub</a></p>
-    </main>
+    <div class="wrap">
+      <header class="top">
+        <a class="brand" href="./"><img src="icon-48.png" alt="" />Kitty Next Door</a>
+        <nav><a href="#features">Features</a><a href="#visits">Visits</a><a href="#get">Get it</a><a href="%REPO%">GitHub</a></nav>
+      </header>
+
+      <div class="hero">
+        <div>
+          <span class="eyebrow">Free · Chrome · Edge · Firefox · Windows</span>
+          <h1>A little cat that keeps you company.</h1>
+          <p class="lead">It naps at the bottom of your screen, watches your cursor and purrs when you pet it. And when you miss someone, it can walk over to their screen for a visit.</p>
+          <div class="get" id="get-top">
+            <a class="btn primary" href="%CHROME%">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8h9M8.5 14l-4.6 7.2M15.5 14l4.6-7.2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+              Add to Chrome
+            </a>
+            <a class="btn" href="%EDGE%">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 13.5c0 4.4-3.6 7.5-8.2 7.5-4.7 0-8.8-3.7-8.8-8.6C4 7.1 8 3 13 3c4.7 0 8 3.2 8 7.3 0 2.8-2.2 4.5-4.8 4.5-2 0-3.2-1-3.2-2.4 0-1.3 1-2 1-3.2C14 7.7 12.8 7 11.5 7 9 7 7 9.6 7 12.5c0 3.3 2.6 5.8 6 5.8 3.3 0 6.2-2 8-4.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              Microsoft Edge
+            </a>
+            <a class="btn" href="%FIREFOX%">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 0 0 9-9c0-2.2-.8-4.2-2-5.8.2 1.2 0 2.4-.6 3.3-.5-2.6-2.3-4.7-4.7-5.6.6 1.3.6 2.9-.2 4.1-.6-1-1.7-1.6-2.9-1.6.8.9.9 2.3.1 3.3C9.5 9.5 8 11 8 13a4 4 0 0 0 7.6 1.8A5 5 0 0 1 12 17a5 5 0 0 1-5-5c0-1.4.6-2.7 1.5-3.6A9 9 0 0 0 12 21z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              Firefox
+            </a>
+            <a class="btn" href="%WINDOWS%" style="grid-column: 1 / -1">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zM12 4.2 21 3v8.5h-9zM3 13h7.5v7.1L3 19zM12 13h9v8l-9-1.3z" fill="currentColor"/></svg>
+              Windows desktop app
+            </a>
+          </div>
+          <p class="fine">Early preview: installs from GitHub while the store listings are being reviewed.</p>
+        </div>
+        <img src="hero.png" width="1600" height="1000" alt="A browser window with an orange cat and a visiting black cat sitting together. A speech bubble reads: Kiki is visiting you! Thinking of you! From Sam." />
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="wrap">
+        <h2>A small friend for long days at the computer</h2>
+        <p class="sub">No feeding schedule, no guilt. It just keeps you company.</p>
+        <div class="features">
+          <div class="card"><div class="ico">🐾</div><h3>Lives on your screen</h3><p>Walks, sits, loafs and naps along the bottom of every page. Clicks pass straight through it.</p></div>
+          <div class="card"><div class="ico">👀</div><h3>Notices you</h3><p>Its eyes follow your cursor. Step away and it curls up to sleep; come back and it wakes up to greet you.</p></div>
+          <div class="card"><div class="ico">💌</div><h3>Visits your friends</h3><p>Send it with a note and a little gift. It walks off your screen and onto theirs, in real time.</p></div>
+          <div class="card"><div class="ico">🔒</div><h3>Private by design</h3><p>It never reads the pages you visit or what you type. Only names, friends and visit notes are shared.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="visits">
+      <div class="wrap">
+        <h2>How visits work</h2>
+        <p class="sub">Friends add each other once. After that it's one click.</p>
+        <div class="steps">
+          <div class="step"><h3>Swap friend codes</h3><p>Everyone gets a short code like <code class="code">7K2F-9QXM</code>. Share it once with a friend.</p></div>
+          <div class="step"><h3>Press Send</h3><p>Add a note and a gift. Your cat walks off the edge of your screen.</p></div>
+          <div class="step"><h3>It shows up for them</h3><p>It sits with their cat and delivers your note, then comes home a couple of hours later, or whenever you call it.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="get">
+      <div class="wrap">
+        <div class="final">
+          <h2>Get your cat</h2>
+          <p class="sub" style="margin:0">Free, and it works in the browser you already use.</p>
+          <div class="get">
+            <a class="btn primary" href="%CHROME%">Add to Chrome</a>
+            <a class="btn" href="%EDGE%">Microsoft Edge</a>
+            <a class="btn" href="%FIREFOX%">Firefox</a>
+            <a class="btn" href="%WINDOWS%" style="grid-column: 1 / -1">Windows desktop app</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <footer>
+        <span>Kitty Next Door · made with care by Fahmid</span>
+        <span><a href="%REPO%">Source on GitHub</a> · <a href="%PRIVACY%">Privacy</a> · <a href="%REPO%/blob/main/LICENSE">License</a></span>
+      </footer>
+    </div>
+    <p class="pet-hint" id="petHint">psst… rub your mouse on the cat 🐾</p>
+    <div id="stage"></div>
+    <script src="home.js"></script>
   </body>
 </html>

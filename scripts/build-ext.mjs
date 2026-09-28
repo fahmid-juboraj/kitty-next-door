@@ -63,15 +63,31 @@ for (const browser of ["chrome", "firefox"]) {
   writeZip(out, path.join("dist-ext", `kitty-next-door-${browser}-${pkg.version}.zip`));
 }
 
-// Landing site (Cloudflare Workers, see realtime/server): / and /visit/
+// Landing site (served by the Cloudflare Worker in realtime/server): / and /visit/
+const site = new URL("../", visitBase).href;
+const repo = "https://github.com/fahmid-juboraj/kitty-next-door";
+// Every install button points at its own section of the README until the store listings exist.
+const links = {
+  SITE: site,
+  REPO: repo,
+  CHROME: `${repo}#install-on-chrome`,
+  EDGE: `${repo}#install-on-microsoft-edge`,
+  FIREFOX: `${repo}#install-on-firefox`,
+  WINDOWS: `${repo}#install-the-windows-app`,
+  PRIVACY: `${repo}/blob/main/realtime/PRIVACY.md`,
+};
+const fill = (html) => html.replace(/%([A-Z]+)%/g, (m, k) => {
+  if (!(k in links)) throw new Error(`unknown placeholder ${m}`);
+  return links[k];
+});
 mkdirSync("dist-site/visit", { recursive: true });
 await build({ ...common, entryPoints: { visit: "src/site/visit.ts" }, outdir: "dist-site/visit" });
-cpSync("src/site/visit.html", "dist-site/visit/index.html");
-cpSync("src/site/index.html", "dist-site/index.html");
-cpSync("art/gallery.png", "dist-site/gallery.png");
+await build({ ...common, entryPoints: { home: "src/site/home.ts" }, outdir: "dist-site" });
+writeFileSync("dist-site/visit/index.html", fill(readFileSync("src/site/visit.html", "utf8")));
+writeFileSync("dist-site/index.html", fill(readFileSync("src/site/index.html", "utf8")));
+cpSync("art/hero.png", "dist-site/hero.png");
+cpSync("art/og.png", "dist-site/og.png");
 cpSync("assets/icon-48.png", "dist-site/icon-48.png");
-cpSync("assets/icon-256.png", "dist-site/og.png");
-writeFileSync("dist-site/.nojekyll", "");
 
 console.log(`extensions + site built (visit links -> ${visitBase})`);
 

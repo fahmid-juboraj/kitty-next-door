@@ -1,9 +1,11 @@
 // Renders every pose and coat to PNGs so the art can be reviewed without
-// running the overlay. `npm run gallery` writes art/gallery.png and assets/icon.png.
+// running the overlay. `npm run gallery` writes art/gallery.png, art/hero.png,
+// art/og.png and the icons in assets/.
 import { COATS, DEFAULT_COAT } from "../core/coats";
 import { drawCat, type RenderState } from "../core/draw";
 import { clonePose, POSES, type Pose, type PoseName } from "../core/pose";
 import type { PetBridge } from "../main/preload";
+import { renderHero, renderOg } from "./marketing";
 
 declare global {
   interface Window { pet: PetBridge }
@@ -98,6 +100,8 @@ async function main(): Promise<void> {
     drawCat(ictx, stateFor(clonePose(sit), { look: { x: 0, y: 0 } }), DEFAULT_COAT, s, ox, oy);
     await window.pet.savePng(`assets/icon-${size}.png`, ic.toDataURL("image/png"));
   }
+  await window.pet.savePng("art/hero.png", renderHero().toDataURL("image/png"));
+  await window.pet.savePng("art/og.png", renderOg().toDataURL("image/png"));
   window.pet.galleryDone();
 }
 
