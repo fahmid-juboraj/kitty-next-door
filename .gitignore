@@ -16,3 +16,6 @@ realtime/server/.wrangler/
 .dev.vars*
 .wrangler/
 release-upload/
+
+# Private notes (kept locally, never published)
+RESEARCH.md
