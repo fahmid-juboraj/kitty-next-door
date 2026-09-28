@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kitty Next Door</title>
+    <meta name="description" content="A cat that lives on your screen, keeps you company, and can visit your friends." />
+    <meta property="og:title" content="Kitty Next Door" />
+    <meta property="og:description" content="A cat that lives on your screen, keeps you company, and can visit your friends." />
+    <meta property="og:image" content="og.png" />
+    <link rel="icon" href="icon-48.png" />
+    <style>
+      :root { --bg: #fdf4e8; --ink: #3b2b27; --muted: #7a6660; --card: #fffaf3; --accent: #f7ad63; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #1d1816; --ink: #f4e9df; --muted: #b9a79c; --card: #2a2320; } }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      main { max-width: 760px; margin: 0 auto; padding: 56px 16px; text-align: center; }
+      h1 { font-size: clamp(32px, 7vw, 48px); margin: 0 0 8px; }
+      p { color: var(--muted); margin: 0 0 24px; }
+      img { max-width: 100%; border-radius: 16px; border: 2px solid var(--ink); }
+      a { color: var(--ink); font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Kitty Next Door</h1>
+      <p>A cat that lives on your screen, keeps you company, and can visit your friends.</p>
+      <img src="gallery.png" alt="The cat in all its poses and coats" />
+      <p style="margin-top:24px"><a href="https://github.com/fahmid-juboraj/kitty-next-door">Get it on GitHub</a></p>
+    </main>
+  </body>
+</html>

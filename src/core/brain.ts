@@ -3,6 +3,14 @@
 import type { Particle, RenderState } from "./draw";
 import { blendPose, clonePose, POSES, type Pose, type PoseName } from "./pose";
 
+/** The parts of a cat worth keeping between tabs and sessions. */
+export interface CatSnapshot {
+  xFrac: number;
+  energy: number;
+  affection: number;
+  facing: 1 | -1;
+}
+
 export type Activity = "stand" | "walk" | "sit" | "loaf" | "sleep" | "carried" | "fall" | "land";
 
 export interface WorldInput {
@@ -90,6 +98,9 @@ export class CatBrain {
   private particles: Particle[] = [];
   private width = 800;
   private groundY = 600;
+  /** Walking off-screen for good (a guest going home). */
+  private exiting = false;
+  private isGone = false;
 
   private readonly awayAfterS: number;
   private readonly slowBlinkRate: number;
@@ -111,6 +122,76 @@ export class CatBrain {
 
   get purrLevel(): number {
     return this.purr;
+  }
+
+  /** Walked off the edge after `leave()`. */
+  get gone(): boolean {
+    return this.isGone;
+  }
+
+  /** Sitting, standing or loafing, and not being handled. */
+  get settled(): boolean {
+    return !this.isHeld && !this.exiting &&
+      (this.activity === "sit" || this.activity === "stand" || this.activity === "loaf");
+  }
+
+  snapshot(): CatSnapshot {
+    return {
+      xFrac: clamp(this.x / Math.max(1, this.width), 0, 1),
+      energy: this.energy,
+      affection: this.affection,
+      facing: this.facing,
+    };
+  }
+
+  restore(s: Partial<CatSnapshot>, width: number): void {
+    this.width = width;
+    if (typeof s.xFrac === "number" && Number.isFinite(s.xFrac)) this.x = clamp(s.xFrac, 0, 1) * width;
+    if (typeof s.energy === "number" && Number.isFinite(s.energy)) this.energy = clamp(s.energy, 0, 1);
+    if (typeof s.affection === "number" && Number.isFinite(s.affection)) this.affection = clamp(s.affection, 0, 1);
+    if (s.facing === 1 || s.facing === -1) this.facing = s.facing;
+    this.facingScale = this.facing;
+  }
+
+  /** Start just off-screen on one side and walk in, to `targetX` if given. */
+  enterFrom(side: -1 | 1, width: number, targetX?: number): void {
+    this.width = width;
+    this.x = side < 0 ? -40 * this.scale : width + 40 * this.scale;
+    this.facing = side < 0 ? 1 : -1;
+    this.facingScale = this.facing;
+    const margin = 50 * this.scale;
+    this.walkTargetX = targetX !== undefined
+      ? clamp(targetX, margin, width - margin)
+      : side < 0 ? rand(0.15, 0.4) * width : rand(0.6, 0.85) * width;
+    this.setActivity("walk", Infinity);
+  }
+
+  /** Walk off the nearest edge; `gone` turns true once out of sight. */
+  leave(): void {
+    this.exiting = true;
+    this.walkTargetX = this.x < this.width / 2 ? -60 * this.scale : this.width + 60 * this.scale;
+    this.setActivity("walk", Infinity);
+  }
+
+  /** Something arriving at `x`: stop, turn toward it, and sit watching for a while. */
+  waitFor(x: number, seconds: number): void {
+    if (this.isHeld || this.exiting) return;
+    this.facing = x > this.x ? 1 : -1;
+    this.setActivity("sit", seconds);
+    this.attention = 0;
+    this.lookTarget = { x: 0.9, y: 0 };
+    this.saccadeTimer = seconds;
+  }
+
+  /** Another cat is close by: turn to it, sit together, share a heart. */
+  meet(otherX: number): void {
+    if (!this.settled) return;
+    this.facing = otherX > this.x ? 1 : -1;
+    this.setActivity("sit", rand(6, 10));
+    this.attention = 0;
+    this.lookTarget = { x: 0.9, y: 0 };
+    this.saccadeTimer = 4;
+    this.spawn("heart", 2);
   }
 
   /** Suggested redraw rate so a napping cat costs almost nothing. */
@@ -238,7 +319,8 @@ export class CatBrain {
         const dx = this.walkTargetX - this.x;
         const speed = WALK_SPEED * S;
         if (Math.abs(dx) < 4) {
-          this.decideNext(w, night);
+          if (this.exiting) this.isGone = true;
+          else this.decideNext(w, night);
           return;
         }
         this.facing = dx > 0 ? 1 : -1;
@@ -256,6 +338,7 @@ export class CatBrain {
 
   private decideNext(w: WorldInput, night: boolean): void {
     const cursor = w.cursor;
+    if (this.exiting) return this.leave();
 
     if (this.greetPending) {
       // You came back: wake, look at you, slow-blink, then come over.
@@ -325,7 +408,7 @@ export class CatBrain {
     if (this.activity === "sleep") {
       this.grumpy = 1.5;
       this.setActivity("sit", rand(4, 8));
-    } else if (this.activity === "walk") {
+    } else if (this.activity === "walk" && !this.exiting) {
       this.setActivity("stand", rand(2, 4));
     }
   }

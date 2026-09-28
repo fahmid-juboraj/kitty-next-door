@@ -2,3 +2,7 @@ node_modules/
 dist/
 art/selftest-*.png
 release/
+dist-ext/
+dist-site/
+dist-test/
+art/harness/

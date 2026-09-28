@@ -5,5 +5,8 @@ import electron from "electron";
 
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
-const child = spawn(electron, [".", ...process.argv.slice(2)], { stdio: "inherit", env });
+// A leading .cjs argument runs that script as the Electron entry (test harnesses).
+const args = process.argv.slice(2);
+const entry = args[0]?.endsWith(".cjs") ? args.shift() : ".";
+const child = spawn(electron, [entry, ...args], { stdio: "inherit", env });
 child.on("exit", (code) => process.exit(code ?? 0));

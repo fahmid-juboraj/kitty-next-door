@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Kitty Next Door</title>
+    <style>
+      :root {
+        --bg: #fffaf3; --ink: #3b2b27; --muted: #7a6660; --line: #ead9c6; --accent: #f7ad63; --card: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #221c1a; --ink: #f4e9df; --muted: #b9a79c; --line: #3d3330; --accent: #f7ad63; --card: #2b2421; }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; width: 320px; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+      header img { width: 36px; height: 36px; }
+      header h1 { font-size: 16px; margin: 0; }
+      header p { margin: 0; color: var(--muted); font-size: 12px; }
+      section { padding: 10px 16px; border-top: 1px solid var(--line); }
+      h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; }
+      label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
+      input[type=text], select { width: 100%; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; }
+      input[type=text]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+      .coats { display: flex; gap: 8px; }
+      .coat { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; padding: 0; }
+      .coat[aria-pressed=true] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
+      button.primary, button.secondary { font: 600 14px system-ui, sans-serif; padding: 8px 12px; border-radius: 10px; cursor: pointer; border: 2px solid var(--ink); color: var(--ink); }
+      button.primary { background: var(--accent); color: #3b2b27; width: 100%; margin-top: 10px; }
+      button.secondary { background: transparent; }
+      .switch { appearance: none; width: 38px; height: 22px; border-radius: 11px; background: var(--line); position: relative; cursor: pointer; flex: none; }
+      .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; }
+      .switch:checked { background: var(--accent); }
+      .switch:checked::after { left: 19px; }
+      .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+      .guest { background: var(--card); border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+      #link { font-size: 12px; margin-top: 8px; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon-48.png" alt="" />
+      <div>
+        <h1>Kitty Next Door</h1>
+        <p>A cat that keeps you company</p>
+      </div>
+    </header>
+
+    <section id="perm" hidden>
+      <div class="note" style="margin-top:0">Your cat needs permission to walk onto websites.</div>
+      <button class="primary" id="grant" type="button">Let the cat onto websites</button>
+    </section>
+
+    <section>
+      <div class="row"><span>Cat on web pages</span><input class="switch" type="checkbox" id="enabled" /></div>
+      <div class="row" id="siteRow" hidden><span id="siteLabel">Hide on this site</span><input class="switch" type="checkbox" id="siteOff" /></div>
+    </section>
+
+    <section>
+      <h2>Your cat</h2>
+      <label for="name">Name</label>
+      <input type="text" id="name" maxlength="24" />
+      <label>Coat</label>
+      <div class="coats" id="coats"></div>
+    </section>
+
+    <section id="guestBox" hidden>
+      <h2>Visitor</h2>
+      <div class="guest">
+        <div id="guestText"></div>
+        <div class="row" style="margin-top:6px"><span class="note" id="guestLeft" style="margin:0"></span><button class="secondary" id="sendHome" type="button">Send home</button></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Send your cat to visit a friend</h2>
+      <label for="from">Your name</label>
+      <input type="text" id="from" maxlength="24" placeholder="So they know who it's from" />
+      <label for="msg">Note</label>
+      <input type="text" id="msg" maxlength="80" placeholder="Thinking of you!" />
+      <label for="gift">Gift</label>
+      <select id="gift"></select>
+      <button class="primary" id="send" type="button">Copy visit link</button>
+      <input type="text" id="link" readonly hidden />
+      <div class="note" id="sendNote">Your friend opens the link and your cat comes to stay with them for a day. It works even if they don't have the extension yet.</div>
+    </section>
+    <script src="popup.js"></script>
+  </body>
+</html>

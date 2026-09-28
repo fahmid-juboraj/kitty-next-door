@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A cat came to visit you · Kitty Next Door</title>
+    <meta name="description" content="A friend sent their cat to visit you. Kitty Next Door is a cat that lives on your screen and keeps you company." />
+    <meta property="og:title" content="A cat came to visit you 🐾" />
+    <meta property="og:description" content="A friend sent their cat to keep you company for a day." />
+    <meta property="og:image" content="../og.png" />
+    <link rel="icon" href="../icon-48.png" />
+    <style>
+      :root { --bg: #fdf4e8; --ink: #3b2b27; --muted: #7a6660; --card: #fffaf3; --line: #ead9c6; --accent: #f7ad63; }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) { --bg: #1d1816; --ink: #f4e9df; --muted: #b9a79c; --card: #2a2320; --line: #3d3330; }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body { background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; min-height: 100vh; }
+      main { max-width: 560px; margin: 0 auto; padding: 56px 16px 260px; text-align: center; }
+      .eyebrow { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+      h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.15; margin: 0 0 18px; }
+      .note { background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 18px 20px; margin: 0 auto 26px; max-width: 440px; box-shadow: 0 6px 0 var(--ink); }
+      .note .msg { font-size: 20px; margin: 0; overflow-wrap: anywhere; }
+      .note .from { color: var(--muted); margin: 8px 0 0; }
+      .gift { font-size: 32px; display: block; margin-bottom: 6px; }
+      .cta { margin-top: 8px; }
+      .cta p { color: var(--muted); margin: 0 0 12px; }
+      .buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+      .buttons a { display: inline-block; padding: 10px 16px; border-radius: 12px; border: 2px solid var(--ink); color: var(--ink); text-decoration: none; font-weight: 600; background: var(--card); }
+      .buttons a.primary { background: var(--accent); color: #3b2b27; }
+      .installed { display: none; color: var(--muted); }
+      html[data-kitty-next-door] .installed { display: block; }
+      html[data-kitty-next-door] .cta { display: none; }
+      #stage { position: fixed; inset: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Kitty Next Door</p>
+      <h1 id="title">A cat came to visit you</h1>
+      <div class="note" id="note" hidden>
+        <span class="gift" id="gift"></span>
+        <p class="msg" id="msg"></p>
+        <p class="from" id="from"></p>
+      </div>
+      <p class="installed">Your own cat noticed the visitor. Look at the bottom of your screen 🐾</p>
+      <div class="cta">
+        <p>Want a cat of your own that keeps you company while you work, and can visit your friends too?</p>
+        <div class="buttons">
+          <a class="primary" id="getChrome" href="#">Get it for Chrome</a>
+          <a id="getFirefox" href="#">Firefox</a>
+          <a id="getEdge" href="#">Edge</a>
+          <a id="getWindows" href="#">Windows app</a>
+        </div>
+      </div>
+    </main>
+    <div id="stage"></div>
+    <script src="visit.js"></script>
+  </body>
+</html>

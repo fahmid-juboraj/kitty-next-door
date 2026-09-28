@@ -87,7 +87,7 @@ async function main(): Promise<void> {
   await window.pet.savePng("art/gallery.png", canvas.toDataURL("image/png"));
 
   // App / tray icon: the sitting cat's face, cropped to fill the square.
-  for (const size of [256, 32]) {
+  for (const size of [256, 128, 48, 32, 16]) {
     const ic = document.createElement("canvas");
     ic.width = ic.height = size;
     const ictx = ic.getContext("2d")!;

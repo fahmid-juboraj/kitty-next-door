@@ -4,6 +4,22 @@ A small cat that lives on your desktop and keeps you company. It naps and wander
 
 ![All poses and coats](art/gallery.png)
 
+## Browser extension (Chrome, Edge, Firefox)
+
+The same cat lives at the bottom of your web pages. It remembers where it was and how it's feeling across tabs, and it pauses in background tabs. Clicks pass through to the page everywhere except on the cat.
+
+**Send your cat to visit a friend:** open the toolbar popup, add a note and a gift, and click **Copy visit link**.
+- If your friend doesn't have the extension, your cat walks onto the link's page and delivers your note.
+- If they do, they click **Let them stay**. Your cat then lives on their screen next to their own cat for a day, and walks home afterwards.
+
+The visit travels inside the link and is never sent to a server.
+
+To try it locally, run `npm run build:ext`, then:
+- **Chrome/Edge:** open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and pick `dist-ext/chrome`.
+- **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `dist-ext/firefox/manifest.json`.
+
+Store zips are written to `dist-ext/*.zip`. Visit links point at `https://fahmid-juboraj.github.io/kitty-next-door/visit/`. Publish `dist-site/` there with GitHub Pages, or set `KITTY_VISIT_BASE` when building.
+
 ## Download (Windows 10/11)
 
 Grab one of these from the Releases page:
@@ -32,6 +48,9 @@ Other scripts:
 | `npm run gallery` | Renders every pose and coat to `art/gallery.png` and regenerates the icons in `assets/` |
 | `npm run selftest` | Runs the real overlay off-screen, saves frames to `art/selftest-*.png` and prints memory and CPU use |
 | `npm run typecheck` | Type-checks the whole project |
+| `npm run build:ext` | Builds the browser extensions, their store zips and the visit landing site (`dist-site/`) |
+| `npm test` | Unit tests for visit links, including malformed and malicious input |
+| `npm run test:ext` | Off-screen end-to-end test of the extension: landing page, accepting a visit, the guest on other pages, and the guest leaving |
 
 ## What the cat does
 
@@ -85,7 +104,8 @@ Tauri uses far less memory, but it needs Rust plus the Microsoft C++ Build Tools
 - [ ] **M4**: hide during fullscreen apps, meetings and presentations; multi-monitor; sitting on top of windows
 - [ ] **M5**: memory (days together, morning greeting), settings (coat, size, sounds), signed installer
 - [ ] More life: grooming, stretching, chasing the cursor, reacting to music
-- [ ] Friend visits: your cat walks off your screen and onto a friend's
+- [x] Friend visits (browser extension): a visit link brings your cat to a friend's screen for a day
+- [ ] Friend visits on the desktop app
 
 ## License
 

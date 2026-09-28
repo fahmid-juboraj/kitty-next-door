@@ -11,7 +11,10 @@
     "gallery": "npm run build && node scripts/run.mjs --gallery",
     "typecheck": "tsc --noEmit",
     "selftest": "npm run build && node scripts/run.mjs --selftest",
-    "dist:win": "npm run build && electron-builder --win"
+    "dist:win": "npm run build && electron-builder --win",
+    "build:ext": "node scripts/build-ext.mjs",
+    "test": "esbuild tests/visit.test.ts --bundle --platform=node --format=esm --outfile=dist-test/visit.test.mjs --log-level=warning && node --test dist-test/visit.test.mjs",
+    "test:ext": "npm run build:ext && node scripts/run.mjs scripts/ext-harness.cjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",
