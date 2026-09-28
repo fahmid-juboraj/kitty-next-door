@@ -1,0 +1,16 @@
+name = "kitty-next-door-live"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[[durable_objects.bindings]]
+name = "USERS"
+class_name = "UserDO"
+
+# The Workers Free plan only offers SQLite-backed Durable Objects.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["UserDO"]
+
+[vars]
+# How long a visit lasts before the cat walks home.
+STAY_SECONDS = "7200"

@@ -1,0 +1,275 @@
+// Server logic tests: several users talking to each other in memory, with a
+// fake clock, fake storage and optional unreachable peers.
+import assert from "node:assert/strict";
+import { beforeEach, test } from "node:test";
+import { UserCore, type CoreEnv, type PeerApi, type UserRecord } from "../server/src/core";
+import type { Notice, Profile, ServerMsg, Snapshot } from "../shared/protocol";
+
+let now = 1_000_000;
+const STAY = 60_000;
+
+interface User {
+  code: string;
+  token: string;
+  core: UserCore;
+  record: () => UserRecord | undefined;
+  sent: ServerMsg[];
+  alarm: number | null;
+}
+
+const world = new Map<string, User>();
+const unreachable = new Set<string>();
+
+function makeUser(code: string): User {
+  let rec: UserRecord | undefined;
+  const u = { code, token: code.padEnd(43, "x"), sent: [] as ServerMsg[], alarm: null as number | null } as User;
+  const env: CoreEnv = {
+    load: async () => (rec ? structuredClone(rec) : undefined),
+    save: async (r) => { rec = structuredClone(r); },
+    wipe: async () => { rec = undefined; },
+    peer: (c) => {
+      if (unreachable.has(c)) {
+        return new Proxy({}, { get: () => async () => { throw new Error("down"); } }) as PeerApi;
+      }
+      return (world.get(c) ?? ghost(c)).core;
+    },
+    send: (m) => u.sent.push(m),
+    setAlarm: async (at) => { u.alarm = at; },
+    hash: async (t) => `h:${t}`,
+    now: () => now,
+    stayMs: STAY,
+  };
+  u.core = new UserCore(env);
+  u.record = () => rec;
+  return u;
+}
+
+/** A code nobody has registered. */
+function ghost(code: string): User {
+  return makeUser(code);
+}
+
+const profile = (cat: string, owner = ""): Profile => ({ cat, coat: "ginger", owner });
+
+async function join(code: string, cat: string): Promise<User> {
+  const u = makeUser(code);
+  world.set(code, u);
+  assert.equal(await u.core.authenticate(code, u.token, profile(cat, `${cat}'s human`)), true);
+  await u.core.welcome(profile(cat, `${cat}'s human`));
+  return u;
+}
+
+const lastState = (u: User): Snapshot => {
+  const s = [...u.sent].reverse().find((m) => m.t === "state");
+  assert.ok(s && s.t === "state", `${u.code} has no state`);
+  return s.state;
+};
+const notices = (u: User): Notice[] => u.sent.flatMap((m) => (m.t === "notice" ? [m.notice] : []));
+const errors = (u: User) => notices(u).filter((n) => n.kind === "error").map((n) => n.error);
+
+async function befriend(a: User, b: User): Promise<void> {
+  await a.core.handle({ t: "friend_request", code: b.code });
+  await b.core.handle({ t: "friend_respond", code: a.code, accept: true });
+}
+
+let A: User, B: User, C: User;
+
+beforeEach(async () => {
+  world.clear();
+  unreachable.clear();
+  now = 1_000_000;
+  A = await join("AAAAAAAA", "Mochi");
+  B = await join("BBBBBBBB", "Kiki");
+  C = await join("CCCCCCCC", "Tofu");
+});
+
+test("registration: the same code with a different token is rejected", async () => {
+  assert.equal(await A.core.authenticate(A.code, "z".repeat(43), profile("Evil")), false);
+  assert.equal(await A.core.authenticate(A.code, A.token, profile("Mochi")), true);
+});
+
+test("friend request, accept, both sides become friends", async () => {
+  await A.core.handle({ t: "friend_request", code: B.code });
+  assert.deepEqual(lastState(A).outgoing.map((p) => p.code), [B.code]);
+  assert.deepEqual(lastState(B).incoming.map((p) => p.code), [A.code]);
+  assert.ok(notices(B).some((n) => n.kind === "friend_request" && n.who?.code === A.code));
+
+  await B.core.handle({ t: "friend_respond", code: A.code, accept: true });
+  assert.deepEqual(lastState(A).friends.map((p) => p.code), [B.code]);
+  assert.deepEqual(lastState(B).friends.map((p) => p.code), [A.code]);
+  assert.equal(lastState(A).friends[0].profile?.cat, "Kiki");
+  assert.equal(lastState(A).outgoing.length, 0);
+});
+
+test("declining removes the request on both sides", async () => {
+  await A.core.handle({ t: "friend_request", code: B.code });
+  await B.core.handle({ t: "friend_respond", code: A.code, accept: false });
+  assert.equal(lastState(A).outgoing.length, 0);
+  assert.equal(lastState(B).incoming.length, 0);
+  assert.equal(lastState(A).friends.length, 0);
+});
+
+test("crossing requests become a friendship automatically", async () => {
+  await A.core.handle({ t: "friend_request", code: B.code });
+  await B.core.handle({ t: "friend_request", code: A.code });
+  assert.deepEqual(lastState(A).friends.map((p) => p.code), [B.code]);
+  assert.deepEqual(lastState(B).friends.map((p) => p.code), [A.code]);
+});
+
+test("requests to yourself or to unknown codes fail", async () => {
+  await A.core.handle({ t: "friend_request", code: A.code });
+  await A.core.handle({ t: "friend_request", code: "ZZZZZZZZ" });
+  assert.deepEqual(errors(A), ["self", "no_such_cat"]);
+  assert.equal(world.has("ZZZZZZZZ"), false);
+});
+
+test("friend requests are rate limited", async () => {
+  for (let i = 0; i < 12; i++) await A.core.handle({ t: "friend_request", code: `D${i}`.padEnd(8, "0").slice(0, 8) });
+  assert.ok(errors(A).includes("rate_limited"));
+});
+
+test("you can't send your cat to a non-friend", async () => {
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "hi", gift: "fish" });
+  assert.deepEqual(errors(A), ["not_friends"]);
+  assert.equal(lastState(A).cat.where, "home");
+  assert.equal(B.record()!.guests[A.code], undefined);
+});
+
+test("send: the cat leaves home and appears at the friend's", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "miss you", gift: "yarn" });
+  const cat = lastState(A).cat;
+  assert.equal(cat.where, "away");
+  assert.equal(cat.where === "away" && cat.at, B.code);
+  assert.equal(A.alarm, now + STAY);
+  const g = lastState(B).guests;
+  assert.equal(g.length, 1);
+  assert.deepEqual([g[0].owner, g[0].msg, g[0].gift, g[0].profile.cat], [A.code, "miss you", "yarn", "Mochi"]);
+  assert.ok(notices(B).some((n) => n.kind === "guest_arrived"));
+  // Already away: can't be in two places.
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  assert.ok(errors(A).includes("cat_busy"));
+});
+
+test("offline host: the guest waits in their record and shows up when they connect", async () => {
+  await befriend(A, B);
+  B.sent.length = 0; // B is "offline": nothing delivered
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  B.sent.length = 0;
+  await B.core.welcome(profile("Kiki", "Kiki's human"));
+  assert.equal(lastState(B).guests[0].owner, A.code);
+});
+
+test("recall brings the cat home and the host loses the guest", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  await A.core.handle({ t: "recall" });
+  assert.equal(lastState(A).cat.where, "home");
+  assert.equal(A.alarm, null);
+  assert.equal(lastState(B).guests.length, 0);
+  assert.ok(notices(A).some((n) => n.kind === "cat_home" && n.reason === "recalled"));
+});
+
+test("host sends the guest home", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  await B.core.handle({ t: "send_home", owner: A.code });
+  assert.equal(lastState(B).guests.length, 0);
+  assert.equal(lastState(A).cat.where, "home");
+  assert.ok(notices(A).some((n) => n.kind === "cat_home" && n.reason === "sent_home" && n.who?.code === B.code));
+});
+
+test("the visit timer brings the cat home, but not early", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  now += STAY / 2;
+  await A.core.alarm();
+  assert.equal(lastState(A).cat.where, "away");
+  now += STAY;
+  await A.core.alarm();
+  assert.equal(lastState(A).cat.where, "home");
+  assert.equal(B.record()!.guests[A.code], undefined);
+  assert.ok(notices(A).some((n) => n.kind === "cat_home" && n.reason === "timeout"));
+});
+
+test("a host takes at most 3 guests; the 4th cat stays home", async () => {
+  const others = [await join("DDDDDDDD", "D"), await join("EEEEEEEE", "E"), await join("FFFFFFFF", "F"), C];
+  for (const o of others) {
+    await befriend(o, B);
+    await o.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  }
+  assert.equal(Object.keys(B.record()!.guests).length, 3);
+  assert.ok(errors(C).includes("host_full"));
+  assert.equal(lastState(C).cat.where, "home");
+});
+
+test("unfriending during a visit sends cats home both ways", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  await B.core.handle({ t: "send_cat", to: A.code, msg: "", gift: "fish" });
+  await B.core.handle({ t: "unfriend", code: A.code });
+  for (const u of [A, B]) {
+    const s = lastState(u);
+    assert.equal(s.cat.where, "home", u.code);
+    assert.equal(s.guests.length, 0, u.code);
+    assert.equal(s.friends.length, 0, u.code);
+  }
+});
+
+test("recall racing with send-home ends consistent", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  await Promise.all([A.core.handle({ t: "recall" }), B.core.handle({ t: "send_home", owner: A.code })]);
+  assert.equal(A.record()!.cat.where, "home");
+  assert.deepEqual(B.record()!.guests, {});
+});
+
+test("an unreachable host: the cat never leaves", async () => {
+  await befriend(A, B);
+  unreachable.add(B.code);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  assert.equal(lastState(A).cat.where, "home");
+  assert.ok(errors(A).includes("unreachable"));
+});
+
+test("a guest the owner no longer thinks is there gets tidied up on connect", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  // Simulate a lost removeGuest: A is home, B still lists the guest.
+  unreachable.add(B.code);
+  await A.core.handle({ t: "recall" });
+  unreachable.clear();
+  assert.ok(B.record()!.guests[A.code]);
+  await B.core.welcome(profile("Kiki"));
+  assert.deepEqual(B.record()!.guests, {});
+});
+
+test("sends are rate limited", async () => {
+  await befriend(A, B);
+  for (let i = 0; i < 21; i++) {
+    await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+    await A.core.handle({ t: "recall" });
+  }
+  assert.ok(errors(A).includes("rate_limited"));
+});
+
+test("deleting your account erases it and cleans up friends, guests and cats", async () => {
+  await befriend(A, B);
+  await befriend(A, C);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  await C.core.handle({ t: "send_cat", to: A.code, msg: "", gift: "fish" });
+  await A.core.handle({ t: "delete_me" });
+  assert.equal(A.record(), undefined);
+  assert.deepEqual(B.record()!.guests, {});
+  assert.deepEqual(B.record()!.friends, {});
+  assert.equal(C.record()!.cat.where, "home");
+  assert.deepEqual(C.record()!.friends, {});
+});
+
+test("profile changes reach friends and hosted guests", async () => {
+  await befriend(A, B);
+  await A.core.handle({ t: "send_cat", to: B.code, msg: "", gift: "fish" });
+  await A.core.handle({ t: "profile", profile: { cat: "Mochi II", coat: "black", owner: "F" } });
+  assert.equal(B.record()!.friends[A.code].profile.cat, "Mochi II");
+  assert.equal(B.record()!.guests[A.code].profile.coat, "black");
+});

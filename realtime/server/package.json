@@ -1,0 +1,15 @@
+{
+  "name": "kitty-next-door-live-server",
+  "private": true,
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8787",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260928.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.143.0"
+  }
+}

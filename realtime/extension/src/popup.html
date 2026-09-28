@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Kitty Next Door Live</title>
+    <style>
+      :root { --bg: #fffaf3; --ink: #3b2b27; --muted: #7a6660; --line: #ead9c6; --accent: #f7ad63; --card: #ffffff; --ok: #3f9d5a; --bad: #c0504d; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #221c1a; --ink: #f4e9df; --muted: #b9a79c; --line: #3d3330; --card: #2b2421; }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; width: 340px; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+      header img { width: 36px; height: 36px; }
+      header h1 { font-size: 16px; margin: 0; }
+      .status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+      .dot.online { background: var(--ok); }
+      .dot.offline { background: var(--bad); }
+      section { padding: 10px 16px; border-top: 1px solid var(--line); }
+      h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+      .grow { flex: 1; min-width: 0; }
+      .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .code { font: 700 20px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .08em; }
+      label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
+      input[type=text], select { width: 100%; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; }
+      input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+      button { font: 600 13px system-ui, sans-serif; padding: 6px 10px; border-radius: 9px; cursor: pointer; border: 2px solid var(--ink); color: var(--ink); background: transparent; white-space: nowrap; }
+      button.primary { background: var(--accent); color: #3b2b27; }
+      button:disabled { opacity: .45; cursor: default; }
+      button.link { border: 0; padding: 0; color: var(--muted); text-decoration: underline; font-weight: 500; }
+      .inline { display: flex; gap: 8px; }
+      .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+      .empty { font-size: 13px; color: var(--muted); }
+      .coats { display: flex; gap: 8px; }
+      .coat { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); padding: 0; }
+      .coat[aria-pressed=true] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
+      .switch { appearance: none; width: 38px; height: 22px; border-radius: 11px; background: var(--line); position: relative; cursor: pointer; flex: none; }
+      .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; }
+      .switch:checked { background: var(--accent); }
+      .switch:checked::after { left: 19px; }
+      details summary { cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon-48.png" alt="" />
+      <div class="grow">
+        <h1>Kitty Next Door</h1>
+        <div class="status"><span class="dot" id="dot"></span><span id="conn">Connecting…</span></div>
+      </div>
+    </header>
+    <div class="note" id="flash" role="status" style="padding:0 16px 8px;margin:0" hidden></div>
+
+    <section id="perm" hidden>
+      <div class="note" style="margin:0">Your cat needs permission to walk onto websites.</div>
+      <button class="primary" id="grant" type="button" style="margin-top:8px">Let the cat onto websites</button>
+    </section>
+
+    <section>
+      <h2>Your cat</h2>
+      <div class="row">
+        <div class="grow"><div class="name" id="catStatus"></div><div class="sub" id="catSub"></div></div>
+        <button id="recall" type="button" hidden>Call home</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Your friend code</h2>
+      <div class="row">
+        <span class="code" id="myCode">…</span>
+        <button id="copyCode" type="button">Copy</button>
+      </div>
+      <div class="note">Share it once with a friend. After that you can send your cat with one click.</div>
+      <label for="addCode">Add a friend by code</label>
+      <div class="inline">
+        <input type="text" id="addCode" maxlength="12" placeholder="XXXX-XXXX" autocomplete="off" spellcheck="false" />
+        <button class="primary" id="add" type="button">Add</button>
+      </div>
+    </section>
+
+    <section id="requestsBox" hidden>
+      <h2>Friend requests</h2>
+      <div id="requests"></div>
+    </section>
+
+    <section>
+      <h2>Friends</h2>
+      <div id="friends"><div class="empty">No friends yet. Add one with their code above.</div></div>
+      <div id="sendOpts">
+        <label for="msg">Note for the visit</label>
+        <input type="text" id="msg" maxlength="80" placeholder="Thinking of you!" />
+        <label for="gift">Gift</label>
+        <select id="gift"></select>
+      </div>
+      <div class="sub" id="outgoing" style="margin-top:8px"></div>
+    </section>
+
+    <section id="guestsBox" hidden>
+      <h2>Visiting you</h2>
+      <div id="guests"></div>
+    </section>
+
+    <section>
+      <details>
+        <summary>Settings</summary>
+        <div class="row" style="margin-top:8px"><span>Cat on web pages</span><input class="switch" type="checkbox" id="enabled" /></div>
+        <div class="row" id="siteRow" hidden><span id="siteLabel">Hide on this site</span><input class="switch" type="checkbox" id="siteOff" /></div>
+        <label for="name">Cat's name</label>
+        <input type="text" id="name" maxlength="24" />
+        <label for="owner">Your name (shown to friends)</label>
+        <input type="text" id="owner" maxlength="24" placeholder="Optional" />
+        <label>Coat</label>
+        <div class="coats" id="coats"></div>
+        <p class="note">Friends see your cat's name, coat, your name and your visit notes. <button class="link" id="deleteMe" type="button">Delete my account</button></p>
+      </details>
+    </section>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -92,7 +92,7 @@ export function parseVisitFragment(hash: string): Visit | null {
   if (!bytes) return null;
   let json: unknown;
   try {
-    json = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    json = JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
   } catch {
     return null;
   }

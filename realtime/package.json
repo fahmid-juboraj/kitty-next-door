@@ -1,0 +1,12 @@
+{
+  "name": "kitty-next-door-live",
+  "private": true,
+  "license": "SEE LICENSE IN ../LICENSE",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p server",
+    "build": "node extension/build.mjs",
+    "test": "node tests/run-unit.mjs",
+    "test:live": "node --test --test-concurrency=1 tests/live.test.mjs",
+    "server": "cd server && wrangler dev --local --port 8787"
+  }
+}

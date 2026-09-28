@@ -6,3 +6,7 @@ dist-ext/
 dist-site/
 dist-test/
 art/harness/
+realtime/**/node_modules/
+realtime/extension/dist/
+realtime/dist-test/
+realtime/server/.wrangler/
