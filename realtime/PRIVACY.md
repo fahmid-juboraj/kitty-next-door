@@ -15,6 +15,9 @@ Your friends see your cat's name and coat, your chosen name, and the notes you s
 - Your mouse movements or clicks. The cat reacts to them only inside your browser.
 - Analytics or tracking of any kind.
 
+## The website
+The website (kitty-next-door.kittynextdoor.workers.dev) uses Cloudflare Web Analytics to count page views. It sets no cookies and doesn't track individual visitors. The download buttons go through short links that count how many times each button is clicked. Only a number per button per day is stored: no IP addresses and no identifiers.
+
 ## How long it's kept
 Your record stays on the server until you delete it. A visit ends by itself after a couple of hours.
 

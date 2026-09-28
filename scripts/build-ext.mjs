@@ -65,16 +65,19 @@ for (const browser of ["chrome", "firefox"]) {
 
 // Landing site (served by the Cloudflare Worker in realtime/server): / and /visit/
 const site = new URL("../", visitBase).href;
-const repo = "https://github.com/fahmid-juboraj/kitty-next-door";
 // Every install button points at its own section of the README until the store listings exist.
+// Buttons go through the Worker's /go/<name> links, which count the click and redirect
+// (targets live in realtime/server/src/stats.ts).
+const go = (name) => `${site}go/${name}`;
 const links = {
   SITE: site,
-  REPO: repo,
-  CHROME: `${repo}#install-on-chrome`,
-  EDGE: `${repo}#install-on-microsoft-edge`,
-  FIREFOX: `${repo}#install-on-firefox`,
-  WINDOWS: `${repo}#install-the-windows-app`,
-  PRIVACY: `${repo}/blob/main/realtime/PRIVACY.md`,
+  REPO: go("github"),
+  CHROME: go("chrome"),
+  EDGE: go("edge"),
+  FIREFOX: go("firefox"),
+  WINDOWS: go("windows"),
+  PRIVACY: go("privacy"),
+  LICENSE: go("license"),
 };
 const fill = (html) => html.replace(/%([A-Z]+)%/g, (m, k) => {
   if (!(k in links)) throw new Error(`unknown placeholder ${m}`);

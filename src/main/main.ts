@@ -8,6 +8,11 @@ const galleryMode = process.argv.includes("--gallery");
 const selfTest = process.argv.includes("--selftest");
 const demoMode = process.argv.includes("--demo");
 
+// Fixed ID: Windows uses it for the taskbar identity and as the name of the
+// "Start with Windows" registry entry, which the uninstaller removes (build/installer.nsh).
+export const APP_ID = "io.github.fahmid-juboraj.kittynextdoor";
+app.setAppUserModelId(APP_ID);
+
 let overlay: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let cursorTimer: NodeJS.Timeout | null = null;

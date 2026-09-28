@@ -45,7 +45,13 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "artifactName": "Kitty-Next-Door-Setup-${version}.${ext}"
+      "artifactName": "Kitty-Next-Door-Setup-${version}.${ext}",
+      "include": "build/installer.nsh",
+      "deleteAppDataOnUninstall": true,
+      "uninstallDisplayName": "Kitty Next Door",
+      "shortcutName": "Kitty Next Door",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "portable": {
       "artifactName": "Kitty-Next-Door-Portable-${version}.${ext}"

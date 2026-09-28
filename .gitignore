@@ -15,3 +15,4 @@ realtime/server/.wrangler/
 .env*
 .dev.vars*
 .wrangler/
+release-upload/

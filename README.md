@@ -1,20 +1,64 @@
-# Kitty Next Door
+<p align="center">
+  <img src="assets/icon-256.png" width="112" alt="Kitty Next Door logo: a smiling orange cat" />
+</p>
 
-A small cat that lives on your desktop and keeps you company. It naps and wanders along the top of your taskbar. Sometimes it sits and watches you, and it's happy to see you when you come back.
+<h1 align="center">Kitty Next Door</h1>
 
-![Your cat and a visiting friend's cat sitting together in a browser window](art/hero.png)
+<p align="center">
+  <b>A little cat that lives on your screen, keeps you company, and walks over to visit your friends.</b><br />
+  A cute desktop pet and browser pet for <b>Chrome</b>, <b>Microsoft Edge</b>, <b>Firefox</b> and <b>Windows</b>.
+</p>
 
-**Website:** https://kitty-next-door.kittynextdoor.workers.dev
+<p align="center">
+  <a href="https://kitty-next-door.kittynextdoor.workers.dev"><img src="https://img.shields.io/badge/website-kitty--next--door-f7ad63?style=flat-square" alt="Website" /></a>
+  <a href="https://github.com/fahmid-juboraj/kitty-next-door/releases/latest"><img src="https://img.shields.io/github/v/release/fahmid-juboraj/kitty-next-door?style=flat-square&color=3b2b27" alt="Latest release" /></a>
+  <a href="https://github.com/fahmid-juboraj/kitty-next-door/releases"><img src="https://img.shields.io/github/downloads/fahmid-juboraj/kitty-next-door/total?style=flat-square&color=3b2b27" alt="Downloads" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-3b2b27?style=flat-square" alt="License: PolyForm Noncommercial 1.0.0" /></a>
+  <a href="https://github.com/fahmid-juboraj/kitty-next-door/stargazers"><img src="https://img.shields.io/github/stars/fahmid-juboraj/kitty-next-door?style=flat-square&color=f7ad63" alt="Stars" /></a>
+</p>
+
+<p align="center">
+  <a href="#install-on-chrome"><img src="https://img.shields.io/badge/Chrome-extension-f7ad63?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome extension" /></a>
+  <a href="#install-on-microsoft-edge"><img src="https://img.shields.io/badge/Edge-extension-3b2b27?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge extension" /></a>
+  <a href="#install-on-firefox"><img src="https://img.shields.io/badge/Firefox-add--on-3b2b27?style=for-the-badge&logo=firefoxbrowser&logoColor=white" alt="Firefox add-on" /></a>
+  <a href="#install-the-windows-app"><img src="https://img.shields.io/badge/Windows-app-3b2b27?style=for-the-badge&logo=windows&logoColor=white" alt="Windows desktop app" /></a>
+</p>
+
+<p align="center">
+  <a href="https://kitty-next-door.kittynextdoor.workers.dev">Website</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#friend-visits">Friend visits</a> ·
+  <a href="#uninstall">Uninstall</a> ·
+  <a href="#faq">FAQ</a> ·
+  <a href="#for-developers">Developers</a>
+</p>
+
+<p align="center">
+  <img src="art/hero.png" width="780" alt="A browser window with an orange cat and a visiting black cat sitting together. A speech bubble reads: Kiki is visiting you! Thinking of you! From Sam." />
+</p>
+
+## What it does
+
+Kitty Next Door is a **virtual cat companion** for people who spend long days at the computer. It isn't a game you have to keep feeding. It just keeps you company.
+
+- 🐾 **Lives on your screen.** It walks, sits, loafs and naps along the bottom of your screen or every web page. Clicks pass straight through it, so it never gets in your way.
+- 👀 **Notices you.** Its eyes follow your cursor, and it slow-blinks at you, which is how cats say "I trust you". Step away and it curls up to sleep; come back and it wakes up to greet you.
+- 💕 **Loves attention.** Rub your mouse over it to pet it and it purrs and shows hearts. Click it for a little "mrrp". Pick it up by the scruff and it looks deeply unimpressed.
+- 💌 **Visits your friends, in real time.** Send your cat with a note and a gift. It walks off your screen and onto theirs, sits with their cat, then comes home.
+- 🎨 **Four coats:** Ginger, Grey Tabby, Cream and Midnight.
+- 🔒 **Private by design.** It never reads the pages you visit or what you type.
+
+<p align="center"><img src="art/gallery.png" width="780" alt="Every pose and coat: standing, walking, sitting, slow blink, purring, loafing, sleeping, being carried" /></p>
 
 ## Install
 
-Store listings are on the way. Until then, every version installs from this repo's [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest).
+Store listings are on the way. Until then, everything installs from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest). Use **one** extension per browser. **Kitty Next Door Live** (real-time visits) is the one to get.
 
 ### Install on Chrome
 1. Download `kitty-next-door-live-chrome-<version>.zip` from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest) and unzip it.
 2. Open `chrome://extensions` and turn on **Developer mode** (top right).
 3. Click **Load unpacked** and choose the unzipped folder.
-4. Click the puzzle-piece icon, then pin **Kitty Next Door Live**. Your friend code is in its popup.
+4. Click the puzzle-piece icon in the toolbar and pin **Kitty Next Door Live**. Your friend code is in its popup.
 
 ### Install on Microsoft Edge
 1. Download `kitty-next-door-live-edge-<version>.zip` from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest) and unzip it.
@@ -24,112 +68,101 @@ Store listings are on the way. Until then, every version installs from this repo
 ### Install on Firefox
 1. Download `kitty-next-door-live-firefox-<version>.zip` from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest).
 2. Open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and choose the zip. Firefox 140 or newer is needed.
-3. Firefox removes temporary add-ons when it restarts. The permanent version arrives with the Firefox Add-ons listing.
+3. Temporary add-ons are removed when Firefox restarts. The permanent version arrives with the Firefox Add-ons listing.
 
 ### Install the Windows app
-1. Download `Kitty-Next-Door-Setup-<version>.exe` (installer) or `Kitty-Next-Door-Portable-<version>.exe` (no install) from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest).
-2. The app isn't code-signed yet, so Windows shows "Windows protected your PC". Click **More info → Run anyway**.
-3. The cat appears at the bottom of your screen. Use the tray icon to hide it, start it with Windows, or quit.
+1. Download **`Kitty-Next-Door-Setup-<version>.exe`** from the [latest release](https://github.com/fahmid-juboraj/kitty-next-door/releases/latest). If you don't want to install anything, get `Kitty-Next-Door-Portable-<version>.exe` instead.
+2. The app isn't code-signed yet, so Windows shows **"Windows protected your PC"**. Click **More info → Run anyway**.
+3. Your cat appears at the bottom of your screen. Right-click the 🐱 tray icon (near the clock) to **hide** it, turn on **Start with Windows**, or **quit**.
 
-Use just one browser extension per browser: either **Kitty Next Door Live** (real-time visits, recommended) or the link-based **Kitty Next Door**.
+The Windows app works on Windows 10 and 11 (64-bit). The browser extensions should also work in Chrome, Edge and Firefox on macOS and Linux, though they've been tested on Windows.
 
-## Browser extension (Chrome, Edge, Firefox)
+## Friend visits
 
-The same cat lives at the bottom of your web pages. It remembers where it was and how it's feeling across tabs, and it pauses in background tabs. Clicks pass through to the page everywhere except on the cat.
+1. Open the extension's popup and copy **your friend code**. It looks like `7K2F-9QXM`.
+2. Send it to a friend. They type it into **Add a friend by code**, and you accept the request.
+3. Next to their name, add a note, pick a gift (🐟 🧶 🌸 🐭) and press **Send**.
+4. Your cat walks off your screen and appears on theirs a moment later, even if they're on the other side of the world. If they're offline, it waits at their door and walks in when they're back.
+5. It comes home by itself after a couple of hours. You can also press **Call home**, or they can press **Send home**.
 
-**Send your cat to visit a friend:** open the toolbar popup, add a note and a gift, and click **Copy visit link**.
-- If your friend doesn't have the extension, your cat walks onto the link's page and delivers your note.
-- If they do, they click **Let them stay**. Your cat then lives on their screen next to their own cat for a day, and walks home afterwards.
+## Uninstall
 
-The visit travels inside the link and is never sent to a server.
+**Windows app (installer):** open **Settings → Apps → Installed apps**, find **Kitty Next Door**, click **⋯ → Uninstall**. On Windows 10 it's **Settings → Apps & features**, or **Control Panel → Programs and Features**. This removes the app, its shortcuts, its settings and the "Start with Windows" entry.
 
-To try it locally, run `npm run build:ext`, then:
-- **Chrome/Edge:** open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and pick `dist-ext/chrome`.
-- **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `dist-ext/firefox/manifest.json`.
+**Windows app (portable):**
+1. Right-click the tray icon and turn off **Start with Windows**.
+2. Click **Quit**.
+3. Delete the `.exe`.
 
-Store zips are written to `dist-ext/*.zip`. Visit links point at `https://kitty-next-door.kittynextdoor.workers.dev/visit/`. That landing site is served by the same Cloudflare Worker as the live server (see `realtime/README.md`). Set `KITTY_VISIT_BASE` when building to use another address.
+**Chrome / Edge:** right-click the cat icon in the toolbar and choose **Remove from Chrome** (or **Remove from Microsoft Edge**). You can also remove it from `chrome://extensions` or `edge://extensions`.
 
-## Run from source
+**Firefox:** open `about:addons`, click **⋯** next to Kitty Next Door and choose **Remove**.
+
+**Your friend code and friends list:** before removing the Live extension, open its popup and choose **Settings → Delete my account**. That erases your record from the server and sends any visiting cats home.
+
+## Privacy
+
+- **The Windows app and the link-based extension** never send anything anywhere.
+- **Kitty Next Door Live** sends only what visits need: your cat's name and coat, the name you choose to show friends, your friends list and your visit notes. It never reads the pages you visit, what you type or your browsing history.
+
+Full details are in [PRIVACY.md](realtime/PRIVACY.md). The website uses Cloudflare Web Analytics, which is cookieless and counts page views without tracking anyone.
+
+## FAQ
+
+**Is it free?** Yes. There are no ads, no accounts to buy and no tracking.
+
+**Why does Windows warn me about the installer?** The app isn't code-signed yet, and signing certificates cost money. The full source code is here, so you (or anyone) can check what it does, or build it yourself.
+
+**Will it slow my computer down?**
+- **Browser extensions:** tiny, about 45 KB, and they pause in background tabs.
+- **Windows app:** built on Electron and uses about 300 MB of RAM. A lighter version is on the roadmap.
+
+**Does the cat show up when I share my screen?**
+- **Windows app:** yes, it stays on top of everything. Right-click the tray icon and choose **Hide cat** before presenting.
+- **Extension:** turn on **Hide on this site** in its popup for any site you don't want it on.
+
+**Can I use it at work or school?** Yes. It's quiet, never makes a sound, and naps most of the time.
+
+**Is it like Shimeji, Desktop Goose or Bongo Cat?** It's in the same family of desktop pets, with a focus on calm companionship, and it's the only one we know of where your cat can actually go and visit a friend.
+
+## For developers
 
 ```sh
 npm install
-npm start               # the cat appears at the bottom of your primary screen
-npm start -- --demo     # short timers, for recording videos (see below)
-npm run dist:win        # builds the installer and portable exe into release/
+npm start                 # Windows desktop app (Electron)
+npm start -- --demo       # short timers, handy for recording videos
+npm run build:ext         # link-based extensions + the website into dist-ext/ and dist-site/
+npm run dist:win          # Windows installer + portable exe into release/
+npm test                  # unit tests
 ```
 
-Hide, show or quit from the tray icon. You can also right-click the cat to quit. The cat stays on top of everything, including fullscreen video and screen shares, so hide it before presenting.
-
-Turn on **Start with Windows** in the tray menu so your cat is there every morning.
-
-Other scripts:
-
-| Script | What it does |
-|---|---|
-| `npm run gallery` | Renders every pose and coat to `art/gallery.png` and regenerates the icons in `assets/` |
-| `npm run selftest` | Runs the real overlay off-screen, saves frames to `art/selftest-*.png` and prints memory and CPU use |
-| `npm run typecheck` | Type-checks the whole project |
-| `npm run build:ext` | Builds the browser extensions, their store zips and the visit landing site (`dist-site/`) |
-| `npm test` | Unit tests for visit links, including malformed and malicious input |
-| `npm run test:ext` | Off-screen end-to-end test of the extension: landing page, accepting a visit, the guest on other pages, and the guest leaving |
-
-## What the cat does
-
-- **Watches you.** Its eyes follow your cursor anywhere on screen. If you stay behind it, it turns around to look at you.
-- **Slow-blinks** when you hold the cursor still near it. In cat language this means "I trust you".
-- **Lives its own life.** It walks, sits, loafs and naps depending on its energy. It gets sleepier at night, and sometimes wanders over to where you are.
-- **Notices when you're away.** After 2 minutes without input it curls up and sleeps. When you come back it wakes, looks at you, slow-blinks and walks over.
-- **Petting:** rub the cursor back and forth over it and it purrs and shows hearts.
-- **Boop:** click it for a little "mrrp".
-- **Pick it up:** drag it and it hangs by the scruff, looking unimpressed. Let go and it drops, lands with a thump and sits looking offended.
-
-Clicks pass straight through everything except the cat itself, and clicking the cat doesn't take focus from the app you're using.
-
-**Privacy:** the cat only reads cursor position and system idle time. It never records keystrokes and makes no network requests.
-
-## Recording a demo
-
-`--demo` makes the cat treat you as "away" after 10 seconds instead of 2 minutes, and makes it slow-blink more readily. Record with **Win+Alt+R** (Xbox Game Bar) or OBS. Moments worth catching:
-- **Welcome back:** stay still for 10 seconds until it falls asleep, then move the mouse. It wakes up, looks at you, slow-blinks and walks over.
-- **Petting:** rub the cursor over it.
-- **Pick-up:** drag it up and let go.
-
-## How it's built
-
-![All poses and coats](art/gallery.png)
+The real-time version (server and extensions) lives in [`realtime/`](realtime/README.md). It has its own build, tests and deployment notes.
 
 ```
-src/core/      Pure TypeScript: no DOM, no Electron
-  pose.ts      Poses as blendable numbers (the "rig")
-  draw.ts      Draws the cat on a 2D canvas from a pose
-  coats.ts     Color palettes (ginger, grey tabby, cream, black)
-  brain.ts     Behavior: activities, energy, attention, petting, greeting
-src/main/      Electron shell: transparent overlay, click-through, cursor and idle polling, tray
-src/renderer/  Connects the shell to the core; gallery.ts renders the review sheet
+src/core/      The cat itself: behavior (brain.ts), pose rig, drawing, coats, visit links
+src/main/      Windows app shell (Electron): transparent overlay, tray, click-through
+src/ext/       Link-based browser extension
+src/site/      Website: home page and visit page
+realtime/      Kitty Next Door Live: Cloudflare Worker + Durable Objects server, extensions, tests
 ```
 
-- **The art is drawn in code.** There are no image files, so it stays small, keeps a clean license for open source, and lets the eyes, breathing and coat colors be fully dynamic.
-- **The core has no dependency on the shell.** The Electron layer only supplies cursor position, idle time and screen size. That keeps moving to Tauri and adding friend visits cheap.
-
-### Why Electron, not Tauri (yet)
-
-Tauri uses far less memory, but it needs Rust plus the Microsoft C++ Build Tools, which weren't installed on the dev machine. On Electron the overlay currently uses about 300 MB of RAM. To switch later:
-
-1. Install the "Desktop development with C++" workload from the [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
-2. Run `winget install --id Rustlang.Rustup`, then `rustup default stable-msvc`.
-3. Replace `src/main/` with a Tauri shell. `src/core/` stays unchanged.
+Everything you see is drawn in code, with no image files for the cat. That keeps it tiny and lets its eyes, breathing and coat colors animate freely.
 
 ## Roadmap
 
-- [x] **M1**: transparent overlay, click-through, walking and idling on the taskbar, eyes follow the cursor, code-drawn art. Tested on a Windows 11 desktop at 125% scaling: transparent background, always on top, click-through away from the cat, no focus stealing.
-- [x] (early) petting, boop, and pick up and drop, all tested on the desktop. Slow blink and greeting when you return are implemented but not yet seen live.
-- [ ] Manual check still needed: tray Hide/Show/Quit, right-click Quit, no taskbar button or Alt+Tab entry
-- [ ] **M4**: hide during fullscreen apps, meetings and presentations; multi-monitor; sitting on top of windows
-- [ ] **M5**: memory (days together, morning greeting), settings (coat, size, sounds), signed installer
-- [ ] More life: grooming, stretching, chasing the cursor, reacting to music
-- [x] Friend visits (browser extension): a visit link brings your cat to a friend's screen for a day
-- [ ] Friend visits on the desktop app
+- [x] Windows desktop app: overlay, petting, pick-up, slow blink, greeting when you come back
+- [x] Browser extensions for Chrome, Edge and Firefox
+- [x] Real-time friend visits
+- [ ] Chrome Web Store, Firefox Add-ons and Edge Add-ons listings
+- [ ] Hide automatically during fullscreen apps, meetings and presentations
+- [ ] "Sam is petting your cat 💕" notifications and online status for friends
+- [ ] More life: grooming, stretching, chasing the cursor
+- [ ] A lighter Windows app, plus macOS and Linux desktop versions
 
 ## License
 
-Kitty Next Door is **source-available** under the [PolyForm Noncommercial License 1.0.0](LICENSE). You're free to use it, study it, modify it and share it for any noncommercial purpose. Any copy must keep the credit line at the top of the LICENSE. Commercial use needs permission from the author, so open an issue to ask.
+Kitty Next Door is **source-available** under the [PolyForm Noncommercial License 1.0.0](LICENSE). You're free to use, study, modify and share it for any noncommercial purpose, as long as you keep the credit line at the top of the LICENSE. For commercial use, please ask first by opening an issue.
+
+Made with care by [Fahmid](https://github.com/fahmid-juboraj).
+
+<sub>Keywords: desktop pet, virtual pet, browser pet, desktop cat, cute cat, cat companion, desktop companion, virtual companion, Chrome extension, Firefox add-on, Microsoft Edge extension, Windows desktop app, Shimeji alternative, cozy app, focus buddy, pet that visits friends.</sub>

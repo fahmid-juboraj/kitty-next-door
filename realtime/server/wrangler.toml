@@ -12,10 +12,22 @@ directory = "../../dist-site"
 name = "USERS"
 class_name = "UserDO"
 
+[[durable_objects.bindings]]
+name = "STATS"
+class_name = "StatsDO"
+
 # The Workers Free plan only offers SQLite-backed Durable Objects.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["UserDO"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["StatsDO"]
+
+# Workers Logs: see button clicks and errors in the dashboard (free plan: a few days of history).
+[observability]
+enabled = true
 
 [vars]
 # How long a visit lasts before the cat walks home.
