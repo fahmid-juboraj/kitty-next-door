@@ -10,3 +10,8 @@ realtime/**/node_modules/
 realtime/extension/dist/
 realtime/dist-test/
 realtime/server/.wrangler/
+
+# Local secrets and tool state: never commit these
+.env*
+.dev.vars*
+.wrangler/
