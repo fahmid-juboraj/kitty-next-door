@@ -166,3 +166,37 @@ export function renderOg(): HTMLCanvasElement {
   drawCat(ctx, sitting(-1), COATS.black, 3.3, 1020, 540);
   return c;
 }
+
+/** Store promo tile (Edge/Chrome small tile is 440x280; the large tile is 1400x560). */
+export function renderPromo(W: number, H: number): HTMLCanvasElement {
+  const c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext("2d")!;
+  const u = H / 280; // design unit
+  ctx.fillStyle = "#fdf4e8";
+  ctx.fillRect(0, 0, W, H);
+  const ground = H - 44 * u;
+  ctx.fillStyle = "#f6e6d2";
+  ctx.fillRect(0, ground, W, H - ground);
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 3 * u;
+  ctx.beginPath();
+  ctx.moveTo(0, ground);
+  ctx.lineTo(W, ground);
+  ctx.stroke();
+  ctx.fillStyle = INK;
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `800 ${36 * u}px ${FONT}`;
+  ctx.fillText("Kitty Next Door", 24 * u, 62 * u);
+  ctx.font = `500 ${17 * u}px ${FONT}`;
+  ctx.globalAlpha = 0.8;
+  ctx.fillText("A cat that keeps you company", 26 * u, 92 * u);
+  ctx.fillText("and visits your friends.", 26 * u, 114 * u);
+  ctx.globalAlpha = 1;
+  const s = 1.55 * u;
+  const cx = W - 150 * u;
+  drawCat(ctx, sitting(1, [heart(33, -72)]), COATS.ginger, s, cx - 50 * u, ground);
+  drawCat(ctx, sitting(-1), COATS.black, s, cx + 52 * u, ground);
+  return c;
+}

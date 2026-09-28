@@ -69,6 +69,9 @@ for (const browser of ["chrome", "edge", "firefox"]) {
     platform: "browser",
     target: "es2022",
     define: { __SERVER__: JSON.stringify(server) },
+    // Fixed working directory, so the output is byte-identical wherever the build runs from
+    // (store reviewers rebuild from source and compare).
+    absWorkingDir: here,
     logLevel: "warning",
   });
   cpSync(path.join(here, "src/popup.html"), path.join(out, "popup.html"));

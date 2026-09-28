@@ -34,6 +34,11 @@
       html[data-kitty-next-door] .installed { display: block; }
       html[data-kitty-next-door] .cta { display: none; }
       #stage { position: fixed; inset: 0; pointer-events: none; }
+      .mobile-note { display: none; margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--soft, #f6e6d2);
+        font-size: 15px; color: var(--ink); max-width: 460px; }
+      .mobile-note button { margin-top: 8px; font: 700 15px system-ui, sans-serif; padding: 8px 14px; border-radius: 10px;
+        border: 2px solid var(--ink); background: var(--card); color: var(--ink); cursor: pointer; }
+      @media (hover: none) and (pointer: coarse) { .mobile-note { display: block; } }
     </style>
   </head>
   <body>
@@ -54,11 +59,24 @@
           <a href="%FIREFOX%">Firefox</a>
           <a href="%WINDOWS%">Windows app</a>
         </div>
+<div class="mobile-note">📱 Kitty Next Door lives on computers. Open this page on your laptop or desktop to install it.<br /><button type="button" class="send-to-computer">Send this link to myself</button></div>
         <p style="margin-top:14px"><a href="%SITE%" style="color:var(--muted)">What is Kitty Next Door?</a></p>
       </div>
     </main>
     <div id="stage"></div>
     <script src="visit.js"></script>
+    <script>
+      // On phones: share (or copy) this page's link so it can be opened on a computer.
+      for (const b of document.querySelectorAll(".send-to-computer")) {
+        b.addEventListener("click", async () => {
+          const url = location.href;
+          try {
+            if (navigator.share) await navigator.share({ title: document.title, url });
+            else { await navigator.clipboard.writeText(url); b.textContent = "Link copied!"; }
+          } catch { /* cancelled */ }
+        });
+      }
+    </script>
     <!-- Cloudflare Web Analytics: cookieless page-view counts -->
     <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "2c06dc2ad3a043a5af06f7cd8f24d560"}'></script>
   </body>

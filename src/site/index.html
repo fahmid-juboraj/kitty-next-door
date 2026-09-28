@@ -90,6 +90,11 @@
         .pet-hint { display: none; }
       }
       @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+      .mobile-note { display: none; margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--soft, #f6e6d2);
+        font-size: 15px; color: var(--ink); max-width: 460px; }
+      .mobile-note button { margin-top: 8px; font: 700 15px system-ui, sans-serif; padding: 8px 14px; border-radius: 10px;
+        border: 2px solid var(--ink); background: var(--card); color: var(--ink); cursor: pointer; }
+      @media (hover: none) and (pointer: coarse) { .mobile-note { display: block; } }
     </style>
   </head>
   <body>
@@ -122,6 +127,7 @@
               Windows desktop app
             </a>
           </div>
+          <div class="mobile-note">📱 Kitty Next Door lives on computers. Open this page on your laptop or desktop to install it.<br /><button type="button" class="send-to-computer">Send this link to myself</button></div>
           <p class="fine">Early preview: installs from GitHub while the store listings are being reviewed.</p>
         </div>
         <img src="hero.png" width="1600" height="1000" alt="A browser window with an orange cat and a visiting black cat sitting together. A speech bubble reads: Kiki is visiting you! Thinking of you! From Sam." />
@@ -177,6 +183,18 @@
     <p class="pet-hint" id="petHint">psst… rub your mouse on the cat 🐾</p>
     <div id="stage"></div>
     <script src="home.js"></script>
+    <script>
+      // On phones: share (or copy) this page's link so it can be opened on a computer.
+      for (const b of document.querySelectorAll(".send-to-computer")) {
+        b.addEventListener("click", async () => {
+          const url = location.href;
+          try {
+            if (navigator.share) await navigator.share({ title: document.title, url });
+            else { await navigator.clipboard.writeText(url); b.textContent = "Link copied!"; }
+          } catch { /* cancelled */ }
+        });
+      }
+    </script>
     <!-- Cloudflare Web Analytics: cookieless page-view counts -->
     <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "2c06dc2ad3a043a5af06f7cd8f24d560"}'></script>
   </body>
