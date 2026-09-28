@@ -50,6 +50,12 @@ const setConn = (c: Conn) => ext.storage.local.set({ [K.conn]: c });
 async function connect(): Promise<void> {
   if (!wantOnline || (ws && ws.readyState <= WebSocket.OPEN)) return;
   if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+  // After "Delete my account", never quietly register a new one.
+  if ((await ext.storage.local.get(K.deleted))[K.deleted]) {
+    wantOnline = false;
+    await setConn("offline");
+    return;
+  }
   const id = await identity();
   ready = false;
   setConn("connecting");
@@ -91,8 +97,10 @@ async function connect(): Promise<void> {
     if (ws === sock) ws = null;
     ready = false;
     if (e.code === 4002) {
-      // Account deleted: forget everything tied to it.
+      // Account deleted: forget everything tied to it, and stay offline.
+      wantOnline = false;
       await ext.storage.local.remove([K.identity, K.state, K.seen, K.guestPos]);
+      await ext.storage.local.set({ [K.deleted]: true });
     }
     await setConn("offline");
     if (wantOnline) {
@@ -116,10 +124,11 @@ function sendAction(action: unknown): void {
 }
 
 // Actions from the popup and content scripts.
-ext.runtime.onMessage.addListener((msg) => {
-  const m = msg as { rt?: unknown; reconnect?: boolean } | null;
+ext.runtime.onMessage.addListener(async (msg) => {
+  const m = msg as { rt?: unknown; reconnect?: boolean; startFresh?: boolean } | null;
+  if (m?.startFresh) await ext.storage.local.remove(K.deleted);
   if (m?.rt) sendAction(m.rt);
-  if (m?.reconnect) { wantOnline = true; backoff = 1000; connect(); }
+  if (m?.reconnect || m?.startFresh) { wantOnline = true; backoff = 1000; connect(); }
 });
 
 // Profile edits go straight to the server.

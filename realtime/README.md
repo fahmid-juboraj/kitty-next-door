@@ -33,28 +33,33 @@ realtime/
 
 ## Try it locally (no Cloudflare account needed)
 
+From `realtime/`:
+
 ```sh
-cd realtime/server && npm install          # once
-npm run dev                                 # local server on ws://127.0.0.1:8787
-# in another terminal, from realtime/
-npm run build                               # extension built for the local server
+npm --prefix server install     # once
+npm run server                  # local server on ws://127.0.0.1:8787 (leave it running)
+npm run build                   # in a second terminal: extension built for the local server
 ```
 
 Then load it:
 - **Chrome/Edge:** open `chrome://extensions` (or `edge://extensions`), turn on Developer mode, click **Load unpacked** and pick `realtime/extension/dist/chrome` (or `.../edge`).
 - **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `realtime/extension/dist/firefox/manifest.json`.
 
-To see two cats visit each other on one computer, use two browsers (say Chrome and Firefox) or two Chrome profiles. Copy one's friend code from the popup, add it in the other, accept, and click **Send**.
+Remove or turn off the link-based Kitty Next Door extension in the same browser first. Otherwise the Live one steps aside and you won't see its cat.
+
+To watch two cats visit each other on one computer, use two browsers (say Chrome and Firefox) or two Chrome profiles. Copy one's friend code from the popup, add it in the other, accept, and click **Send**.
 
 ## Tests
 
-| Command (from `realtime/`) | What it checks |
+From `realtime/`. The last three need the local server running as `npm run server:test`, which sets a 4-second visit so the timer is quick to test.
+
+| Command | What it checks |
 |---|---|
 | `npm run typecheck` | Extension, shared code and server |
-| `npm test` | 24 unit tests: server rules, including races, offline hosts, full hosts, unfriend mid-visit and account deletion; message validation |
-| `npm run test:live` | Real local Cloudflare runtime: sign-in, bad tokens, junk frames, friends, real-time moves, the visit timer, offline delivery, delete. Needs `npm run server` running, started with `--var STAY_SECONDS:4` |
-| `node --test tests/background.test.mjs` | Two copies of the built background script talking through the local server |
-| `node scripts/run.mjs realtime/tests/content-harness.cjs` (from repo root) | On-page behavior: your cat walks off and back, visitors arrive and leave, toasts, no double cats |
+| `npm test` | 25 unit tests: the server rules, including races, offline hosts, full hosts, unfriending mid-visit, and deleting an account at the 50-friend cap; message validation |
+| `npm run test:live` | The real local Cloudflare runtime: sign-in, bad tokens, junk frames, friends, real-time moves, the visit timer, offline delivery, delete |
+| `npm run test:bg` | Builds, then runs two copies of the real background script talking through the local server. Includes "a deleted account stays deleted" |
+| `npm run test:page` | Builds, then checks the page (your cat walks off and back, visitors come and go, toasts, no double cats) and every popup button |
 
 ## Going live on Cloudflare (free)
 

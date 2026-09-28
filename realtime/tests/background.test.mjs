@@ -60,7 +60,9 @@ class Browser {
     vm.runInContext(code, this.ctx);
     browsers.push(this);
   }
-  act(rt) { this.messages.list.forEach((cb) => cb({ rt }, {}, () => {})); }
+  act(rt) { this.message({ rt }); }
+  message(m) { this.messages.list.forEach((cb) => cb(m, {}, () => {})); }
+  wake() { this.alarm.list.forEach((cb) => cb({ name: "rt-wake" })); }
   setIdle(state) { this.idleChanged.list.forEach((cb) => cb(state)); }
   get state() { return this.store.rt_state; }
   async until(pred, what, ms = 8000) {
@@ -140,4 +142,23 @@ test("a malformed action from a page never reaches the server", async () => {
   await new Promise((r) => setTimeout(r, 400));
   assert.equal(a.store.rt_notice, undefined); // the server never saw anything to complain about
   assert.equal(a.store.rt_conn, "online");
+});
+
+test("deleting the account stays deleted: no silent re-registration until you start fresh", async () => {
+  const a = new Browser("A4", { enabled: true, coat: "ginger", name: "Pip", disabledSites: [] });
+  await a.until((s) => s.rt_conn === "online" && s.rt_state, "online");
+  const oldCode = a.state.me.code;
+  a.act({ t: "delete_me" });
+  await a.until((s) => s.rt_deleted === true && !s.rt_identity && !s.rt_state, "deleted locally");
+  // Everything that normally reconnects: backoff timer, alarm wake-up, coming back from idle, popup opening.
+  a.wake();
+  a.setIdle("active");
+  a.message({ reconnect: true });
+  await new Promise((r) => setTimeout(r, 3000));
+  assert.equal(a.store.rt_identity, undefined, "no new identity was created");
+  assert.equal(a.store.rt_conn, "offline");
+
+  a.message({ startFresh: true });
+  await a.until((s) => s.rt_conn === "online" && s.rt_state && !s.rt_deleted, "fresh account online");
+  assert.notEqual(a.state.me.code, oldCode);
 });

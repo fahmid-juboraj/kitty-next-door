@@ -43,6 +43,8 @@ export const K = {
   seen: "rt_seen",
   guestPos: "rt_guest_pos",
   error: "rt_fatal",
+  /** Set after "Delete my account"; the extension stays offline until you start fresh. */
+  deleted: "rt_deleted",
 } as const;
 
 export type Conn = "online" | "connecting" | "offline";

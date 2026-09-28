@@ -273,3 +273,32 @@ test("profile changes reach friends and hosted guests", async () => {
   assert.equal(B.record()!.friends[A.code].profile.cat, "Mochi II");
   assert.equal(B.record()!.guests[A.code].profile.coat, "black");
 });
+
+test("at the friend cap: 50 friends, 3 visiting, then delete cleans every one of them", async () => {
+  const codes: string[] = [];
+  for (let i = 0; i < 50; i++) {
+    const code = `F${String(i).padStart(2, "0")}`.padEnd(8, "Z").replace(/[ILOU]/g, "1");
+    const u = await join(code, `Cat${i}`);
+    await u.core.handle({ t: "friend_request", code: A.code });
+    await A.core.handle({ t: "friend_respond", code, accept: true });
+    codes.push(code);
+  }
+  assert.equal(Object.keys(A.record()!.friends).length, 50);
+  // A 51st friend is refused.
+  await B.core.handle({ t: "friend_request", code: A.code });
+  await A.core.handle({ t: "friend_respond", code: B.code, accept: true });
+  assert.ok(errors(A).includes("too_many_friends"));
+
+  for (const c of codes.slice(0, 4)) await world.get(c)!.core.handle({ t: "send_cat", to: A.code, msg: "", gift: "fish" });
+  assert.equal(Object.keys(A.record()!.guests).length, 3);
+  await A.core.handle({ t: "send_cat", to: codes[10], msg: "", gift: "fish" });
+
+  await A.core.handle({ t: "delete_me" });
+  assert.equal(A.record(), undefined);
+  for (const c of codes) {
+    const r = world.get(c)!.record()!;
+    assert.deepEqual(r.friends, {}, c);
+    assert.deepEqual(r.guests, {}, c);
+    assert.equal(r.cat.where, "home", c);
+  }
+});

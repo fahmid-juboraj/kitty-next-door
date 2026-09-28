@@ -26,13 +26,32 @@ function button(label: string, onClick: () => void, primary = false): HTMLButton
   return b;
 }
 
+/** Ask for a second click instead of confirm(), which extension popups may not support. */
+function confirmButton(b: HTMLButtonElement, label: string, onConfirm: () => void): void {
+  let armed = false;
+  let timer = 0;
+  const original = b.textContent;
+  b.addEventListener("click", () => {
+    if (!armed) {
+      armed = true;
+      b.textContent = label;
+      timer = window.setTimeout(() => { armed = false; b.textContent = original; }, 4000);
+      return;
+    }
+    clearTimeout(timer);
+    armed = false;
+    b.textContent = original;
+    onConfirm();
+  });
+}
+
 function timeLeft(ms: number): string {
   const min = Math.max(0, Math.round(ms / 60_000));
   return min >= 60 ? `about ${Math.round(min / 60)} h` : `${Math.max(1, min)} min`;
 }
 
 async function main(): Promise<void> {
-  const r = await ext.storage.local.get(["settings", K.owner, K.state, K.conn]);
+  const r = await ext.storage.local.get(["settings", K.owner, K.state, K.conn, K.deleted]);
   let settings: Settings = validSettings(r.settings);
   const saveSettings = (patch: Partial<Settings>) => {
     settings = { ...settings, ...patch };
@@ -131,11 +150,12 @@ async function main(): Promise<void> {
     setTimeout(() => { $("copyCode").textContent = "Copy"; }, 1500);
   });
   $("recall").addEventListener("click", () => act({ t: "recall" }));
-  $("deleteMe").addEventListener("click", () => {
-    if (confirm("Delete your Kitty Next Door account? Friends lose you, visiting cats go home, and your friend code is erased.")) {
-      act({ t: "delete_me" });
-    }
+  confirmButton($<HTMLButtonElement>("deleteMe"), "Click again to delete everything", () => act({ t: "delete_me" }));
+  $("startFresh").addEventListener("click", () => {
+    ext.runtime.sendMessage({ startFresh: true }).catch(() => {});
+    $("deletedBox").hidden = true;
   });
+  $("deletedBox").hidden = !r[K.deleted];
 
   function renderConn(c: Conn): void {
     $("dot").className = `dot ${c}`;
@@ -174,10 +194,9 @@ async function main(): Promise<void> {
     $("friends").replaceChildren(...(friends.length ? friends.map((p) => {
       const send = button(`Send ${myCat}`, () => act({ t: "send_cat", to: p.code, msg: cleanText(msg.value, LIMITS.msg), gift: gift.value as GiftId }), true);
       send.disabled = cat.where !== "home";
-      const remove = button("✕", () => {
-        if (confirm(`Remove ${nameOf(p)} from your friends?`)) act({ t: "unfriend", code: p.code });
-      });
-      remove.title = "Remove friend";
+      const remove = button("✕", () => {});
+      remove.title = `Remove ${nameOf(p)} from friends`;
+      confirmButton(remove, "Remove?", () => act({ t: "unfriend", code: p.code }));
       return personRow(p, `${catOf(p)} · ${formatCode(p.code)}`, send, remove);
     }) : [el("div", { className: "empty", textContent: "No friends yet. Add one with their code above." })]));
     $("outgoing").textContent = s?.outgoing.length
@@ -198,6 +217,7 @@ async function main(): Promise<void> {
     if (area !== "local") return;
     if (changes[K.state]) { state = snapshot(changes[K.state].newValue); render(); }
     if (changes[K.conn]) renderConn(changes[K.conn].newValue as Conn);
+    if (changes[K.deleted]) $("deletedBox").hidden = !changes[K.deleted].newValue;
     const n = changes[K.notice]?.newValue as { notice?: Parameters<typeof describeNotice>[0] } | undefined;
     const text = n?.notice ? describeNotice(n.notice, state) : null;
     if (text) {
