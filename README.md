@@ -47,6 +47,7 @@ Kitty Next Door is a **virtual cat companion** for people who spend long days at
 - 💌 **Visits your friends, in real time.** Send your cat with a note, a gift and even a **letter**. It walks off your screen and onto theirs, sits with their cat, then comes home.
 - 🌳 **The Kitty Park.** Send your cat to a live [public park](https://kitty-next-door.kittynextdoor.workers.dev/park/) where cats from everywhere play together. One wears the 👑 as Cat of the Hour, and you can make a 📸 postcard to share.
 - 🎨 **Four coats:** Ginger, Grey Tabby, Cream and Midnight.
+- 🌍 **Any language.** Name your cat and write notes and letters in any language or script: Bangla, Hindi, Arabic, Chinese, Japanese, Spanish, emoji and more. The cat itself speaks in purrs, so it needs no translation. (The app's menus are in English for now.)
 - 🔒 **Private by design.** It never reads the pages you visit or what you type.
 
 <p align="center"><img src="art/gallery.png" width="780" alt="Every pose and coat: standing, walking, sitting, slow blink, purring, loafing, sleeping, being carried" /></p>
@@ -130,6 +131,8 @@ Full details are in [PRIVACY.md](realtime/PRIVACY.md). The website uses Cloudfla
 - **Windows app:** yes, it stays on top of everything. Right-click the tray icon and choose **Hide cat** before presenting.
 - **Extension:** turn on **Hide on this site** in its popup for any site you don't want it on.
 
+**Does it work in my language?** Your cat's name, visit notes and letters can be written in any language, including Bangla (বাংলা), Hindi (हिन्दी), Arabic (العربية), Chinese (中文), Japanese (日本語) and Spanish (Español). The buttons and menus are in English for now; translations are on the roadmap.
+
 **Can I use it at work or school?** Yes. It's quiet, never makes a sound, and naps most of the time.
 
 **Is it like Shimeji, Desktop Goose or Bongo Cat?** It's in the same family of desktop pets, with a focus on calm companionship, and it's the only one we know of where your cat can actually go and visit a friend.
@@ -169,6 +172,7 @@ Everything you see is drawn in code, with no image files for the cat. That keeps
 - [ ] "Sam is petting your cat 💕" notifications and online status for friends
 - [ ] More life: grooming, stretching, chasing the cursor
 - [ ] A lighter Windows app, plus macOS and Linux desktop versions
+- [ ] Menus and popup translated into more languages
 
 ## License
 
@@ -176,4 +180,4 @@ Kitty Next Door is **source-available** under the [PolyForm Noncommercial Licens
 
 Made with care by [Fahmid](https://github.com/fahmid-juboraj).
 
-<sub>Keywords: desktop pet, virtual pet, browser pet, desktop cat, cute cat, cat companion, desktop companion, virtual companion, Chrome extension, Firefox add-on, Microsoft Edge extension, Windows desktop app, Shimeji alternative, cozy app, focus buddy, pet that visits friends.</sub>
+<sub>Keywords: desktop pet, virtual pet, browser pet, desktop cat, cute cat, cat companion, desktop companion, virtual companion, Chrome extension, Firefox add-on, Microsoft Edge extension, Windows desktop app, Shimeji alternative, cozy app, focus buddy, pet that visits friends, send letters to friends, live cat park, works in any language.</sub>

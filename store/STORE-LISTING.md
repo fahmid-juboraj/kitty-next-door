@@ -49,7 +49,7 @@ Send your cat to a live public park where cats from all over the world play toge
 PRIVATE BY DESIGN
 The cat never reads the pages you visit, what you type or your browsing history. Only what visits need is sent: your cat's name and coat, the name you choose to show friends, your friends list, and your visit notes and letters. You can delete your account at any time from the popup.
 
-Choose from four coats: Ginger, Grey Tabby, Cream and Midnight. Free, no ads.
+Choose from four coats: Ginger, Grey Tabby, Cream and Midnight. Name your cat and write notes and letters in any language. Free, no ads.
 ```
 
 ## Firefox Add-ons (addons.mozilla.org)
