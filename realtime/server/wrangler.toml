@@ -42,3 +42,8 @@ enabled = true
 STAY_SECONDS = "7200"
 # How long a trip to the park lasts.
 PARK_STAY_SECONDS = "3600"
+# Download badges. Firefox users come live from addons.mozilla.org (by this slug).
+# Edge and Chrome have no public API: copy "weekly users" from their dashboards here, then deploy.
+AMO_SLUG = "kitty-next-door-live"
+EDGE_USERS = "0"
+CHROME_USERS = "0"

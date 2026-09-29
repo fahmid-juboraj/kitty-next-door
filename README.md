@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://kitty-next-door.kittynextdoor.workers.dev"><img src="https://img.shields.io/badge/website-kitty--next--door-f7ad63?style=flat-square" alt="Website" /></a>
   <a href="https://github.com/fahmid-juboraj/kitty-next-door/releases/latest"><img src="https://img.shields.io/github/v/release/fahmid-juboraj/kitty-next-door?style=flat-square&color=3b2b27" alt="Latest release" /></a>
-  <a href="https://github.com/fahmid-juboraj/kitty-next-door/releases"><img src="https://img.shields.io/github/downloads/fahmid-juboraj/kitty-next-door/total?style=flat-square&color=3b2b27" alt="Downloads" /></a>
+  <a href="#download-counts"><img src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fkitty-next-door.kittynextdoor.workers.dev%2Fbadge%2Finstalls.json" alt="Installs (live)" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-3b2b27?style=flat-square" alt="License: PolyForm Noncommercial 1.0.0" /></a>
   <a href="https://github.com/fahmid-juboraj/kitty-next-door/stargazers"><img src="https://img.shields.io/github/stars/fahmid-juboraj/kitty-next-door?style=flat-square&color=f7ad63" alt="Stars" /></a>
 </p>
@@ -22,6 +22,13 @@
   <a href="#install-on-microsoft-edge"><img src="https://img.shields.io/badge/Edge-extension-3b2b27?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge extension" /></a>
   <a href="#install-on-firefox"><img src="https://img.shields.io/badge/Firefox-add--on-3b2b27?style=for-the-badge&logo=firefoxbrowser&logoColor=white" alt="Firefox add-on" /></a>
   <a href="#install-the-windows-app"><img src="https://img.shields.io/badge/Windows-app-3b2b27?style=for-the-badge&logo=windows&logoColor=white" alt="Windows desktop app" /></a>
+</p>
+
+<p align="center">
+  <a href="#download-counts"><img src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fkitty-next-door.kittynextdoor.workers.dev%2Fbadge%2Fchrome.json" alt="Chrome downloads (live)" /></a>
+  <a href="#download-counts"><img src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fkitty-next-door.kittynextdoor.workers.dev%2Fbadge%2Fedge.json" alt="Edge downloads (live)" /></a>
+  <a href="#download-counts"><img src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fkitty-next-door.kittynextdoor.workers.dev%2Fbadge%2Ffirefox.json" alt="Firefox downloads (live)" /></a>
+  <a href="#download-counts"><img src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fkitty-next-door.kittynextdoor.workers.dev%2Fbadge%2Fwindows.json" alt="Windows downloads (live)" /></a>
 </p>
 
 <p align="center">
@@ -109,6 +116,17 @@ Open the popup and click **🌳 Send to the Park**. Your cat walks off your scre
 **Firefox:** open `about:addons`, click **⋯** next to Kitty Next Door and choose **Remove**.
 
 **Your friend code and friends list:** before removing the Live extension, open its popup and choose **Settings → Delete my account**. That erases your record from the server and sends any visiting cats home.
+
+## Download counts
+
+The badges at the top are live. Every number is a real count from one of these sources, refreshed about every 10 minutes:
+
+| Badge | What it counts |
+|---|---|
+| **Chrome, Edge, Firefox, Windows** | Downloads of that platform's files from [GitHub Releases](https://github.com/fahmid-juboraj/kitty-next-door/releases), across all versions. Once the store listings are live, their users are added too: Firefox automatically from addons.mozilla.org, Edge and Chrome as copied from their dashboards. |
+| **installs** | All of the above added together |
+
+Source-code zips and checksum files aren't counted, and neither are website button clicks, since a click isn't an install. The raw numbers are at [/badge/counts.json](https://kitty-next-door.kittynextdoor.workers.dev/badge/counts.json).
 
 ## Privacy
 

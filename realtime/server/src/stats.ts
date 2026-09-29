@@ -2,6 +2,17 @@
 // tiny SQLite table of (day, target) -> count. No IPs, cookies or user agents
 // are stored; only the number of clicks per button per day.
 import { DurableObject } from "cloudflare:workers";
+import { fetchCounts, type Counts } from "./badges";
+
+/** Settings for the download badges (wrangler.toml [vars], plus an optional GITHUB_TOKEN secret). */
+export interface BadgeEnv {
+  AMO_SLUG?: string;
+  EDGE_USERS?: string;
+  CHROME_USERS?: string;
+  GITHUB_TOKEN?: string;
+}
+
+const BADGE_TTL_MS = 10 * 60_000;
 
 /** Where each button goes. Change a target here when a store listing goes live. */
 export const TARGETS: Record<string, string> = {
@@ -18,9 +29,9 @@ export const TARGETS: Record<string, string> = {
 export const isBot = (ua: string | null) =>
   !ua || /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|discord|embedly|curl|wget|python|headless/i.test(ua);
 
-export class StatsDO extends DurableObject {
-  constructor(ctx: DurableObjectState, env: unknown) {
-    super(ctx, env as never);
+export class StatsDO extends DurableObject<BadgeEnv> {
+  constructor(ctx: DurableObjectState, env: BadgeEnv) {
+    super(ctx, env);
     ctx.storage.sql.exec(
       "CREATE TABLE IF NOT EXISTS clicks (day TEXT NOT NULL, target TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, target))",
     );
@@ -33,6 +44,24 @@ export class StatsDO extends DurableObject {
       "INSERT INTO clicks (day, target, n) VALUES (?, ?, 1) ON CONFLICT (day, target) DO UPDATE SET n = n + 1",
       day, target,
     );
+  }
+
+  /** Download/install numbers, refreshed at most every 10 minutes (GitHub's API has rate limits). */
+  async counts(): Promise<Counts> {
+    const cached = await this.ctx.storage.get<Counts>("badge-counts");
+    if (cached && Date.now() - cached.fetchedAt < BADGE_TTL_MS) return cached;
+    const toInt = (v?: string) => Math.max(0, Math.floor(Number(v ?? 0)) || 0);
+    const fresh = await fetchCounts({
+      fetch: (input, init) => fetch(input, init),
+      repo: "fahmid-juboraj/kitty-next-door",
+      amoSlug: this.env.AMO_SLUG || "kitty-next-door-live",
+      edgeUsers: toInt(this.env.EDGE_USERS),
+      chromeUsers: toInt(this.env.CHROME_USERS),
+      githubToken: this.env.GITHUB_TOKEN,
+      now: Date.now(),
+    }, cached);
+    await this.ctx.storage.put("badge-counts", fresh);
+    return fresh;
   }
 
   report(): { totals: Record<string, number>; last30Days: { day: string; target: string; n: number }[] } {

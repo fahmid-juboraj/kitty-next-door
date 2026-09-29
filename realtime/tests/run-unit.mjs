@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const files = ["core", "protocol"];
+const files = ["core", "protocol", "badges"];
 for (const f of files) {
   await build({
     entryPoints: [path.join(here, `${f}.test.ts`)], outfile: path.join(here, "..", "dist-test", `${f}.test.mjs`),

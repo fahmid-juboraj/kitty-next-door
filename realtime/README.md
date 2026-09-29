@@ -79,6 +79,9 @@ Always deploy from `realtime/` (or `realtime/server/`). Running `wrangler deploy
 
 Chrome Web Store charges a one-time $5 fee; Edge Add-ons and Firefox Add-ons are free. The stores ask for a privacy policy, so link [PRIVACY.md](PRIVACY.md) once the code is on GitHub.
 
+### Download badges
+`/badge/<installs|downloads|chrome|edge|firefox|windows>.json` serves live counts in shields.io's endpoint format. They come from GitHub release downloads, cached for 10 minutes, and from the Firefox add-on's daily users via the public addons.mozilla.org API (`AMO_SLUG` in `wrangler.toml`). Edge and Chrome have no public API. Copy their weekly users from the store dashboards into `EDGE_USERS` and `CHROME_USERS` in `wrangler.toml`, then `npm run deploy`. For higher GitHub API limits, optionally add a token: `npx wrangler secret put GITHUB_TOKEN`.
+
 ### Cost
 - The Workers Free plan includes Durable Objects (SQLite storage) and 100,000 requests a day.
 - A user who isn't doing anything costs almost nothing:

@@ -4,16 +4,18 @@
 //   /stats?key=...      click counts (needs the STATS_KEY secret)
 //   /v1/park            live view of the public park (read-only WebSocket)
 //   /admin/park?key=... list cats in the park; &kick=<id> (&block=1) removes one
+//   /badge/<name>.json  live download/install numbers for README badges (shields.io endpoint format)
 //   everything else     static site files from ../../dist-site
 import { CODE_RE } from "../../shared/protocol";
-import { isBot, StatsDO, TARGETS } from "./stats";
+import { badge, BADGES, type BadgeName } from "./badges";
+import { isBot, StatsDO, TARGETS, type BadgeEnv } from "./stats";
 import type { Env as UserEnv } from "./user";
 
 export { UserDO } from "./user";
 export { ParkDO } from "./park";
 export { StatsDO };
 
-interface Env extends UserEnv {
+interface Env extends UserEnv, BadgeEnv {
   STATS: DurableObjectNamespace<StatsDO>;
   /** Set with `npx wrangler secret put STATS_KEY`. Without it, /stats is off. */
   STATS_KEY?: string;
@@ -53,6 +55,17 @@ export default {
     }
 
     if (url.pathname === "/v1/park") return park(env).fetch(request);
+
+    const b = /^\/badge\/([a-z]+)\.json$/.exec(url.pathname);
+    if (b && (BADGES as readonly string[]).includes(b[1])) {
+      const counts = await stats(env).counts();
+      return Response.json(badge(b[1] as BadgeName, counts), {
+        headers: { "cache-control": "public, max-age=300", "access-control-allow-origin": "*" },
+      });
+    }
+    if (url.pathname === "/badge/counts.json") {
+      return Response.json(await stats(env).counts(), { headers: { "cache-control": "public, max-age=300", "access-control-allow-origin": "*" } });
+    }
 
     if (url.pathname === "/admin/park") {
       if (!authorized(env, url)) return new Response("not found", { status: 404 });
